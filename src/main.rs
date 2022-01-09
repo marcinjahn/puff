@@ -1,13 +1,15 @@
 use std::error::Error;
 use clap::StructOpt;
 use cli_args::{Cli, Commands};
-use crate::app_config::AppInitializer;
 
 mod cli_args;
-mod app_config;
+mod app_init;
+mod config;
+mod project_init;
+mod error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    AppInitializer::init()?;
+    app_init::init()?;
     
     let args = Cli::parse();
 
