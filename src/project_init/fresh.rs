@@ -4,7 +4,7 @@ use crate::{
 };
 use std::{
     error::Error,
-    fs::{self},
+    fs,
     path::Path,
 };
 
