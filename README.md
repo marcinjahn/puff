@@ -12,3 +12,15 @@ private version control repository that could store all these config files).
 
 The configuration files are accessible to their projects via soft links that
 conman creates.
+
+## Development
+
+You can install the app locally using:
+
+```sh
+git clone https://github.com/marcinjahn/conman
+cd conman
+cargo install --path .
+```
+
+Use `conman --help` to learn how to use it.
