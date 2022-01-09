@@ -1,8 +1,5 @@
 use crate::{
-    config::{
-        locations,
-        projects::{self, get_unassociated_projects},
-    },
+    config::projects::{self, get_unassociated_projects},
     error::AppError,
     project_init::{existing, fresh},
 };
@@ -26,7 +23,7 @@ pub fn init() -> Result<(), Box<dyn Error>> {
         handle_with_unassociated(unassociated, &cwd)?;
     } else {
         let name = get_fresh_project_name(&cwd)?;
-        handle_fresh_project(&name)?;
+        fresh::init_project(&name, &cwd)?;
     }
 
     println!("Project has been set up with conman");
@@ -36,12 +33,14 @@ pub fn init() -> Result<(), Box<dyn Error>> {
 
 fn handle_with_unassociated(unassociated: Vec<String>, cwd: &Path) -> Result<(), Box<dyn Error>> {
     println!("conman has a few projects that are still not associated with any path on your machine. Do you want");
-    println!("to associate one of them with the current path, or do you want to set up a fresh project?");
+    println!(
+        "to associate one of them with the current path, or do you want to set up a fresh project?"
+    );
     let choice = ask_about_unassociated(&unassociated)?;
     match choice {
         UserChoice::Fresh => {
             let name = get_fresh_project_name(cwd)?;
-            handle_fresh_project(&name)?;
+            fresh::init_project(&name, cwd)?;
         }
         UserChoice::Existing(name) => existing::init_project(name, cwd)?,
     }
@@ -62,7 +61,7 @@ fn get_fresh_project_name(cwd: &Path) -> Result<String, Box<dyn Error>> {
     } else {
         println!("Provide a name for this new project: ");
     }
-    
+
     let mut user_name = String::new();
     std::io::stdin().read_line(&mut user_name)?;
     user_name = user_name.trim().to_owned();
@@ -102,10 +101,4 @@ fn ask_about_unassociated(unassociated: &[String]) -> Result<UserChoice, Box<dyn
     println!("Provided option {} is uncrecognized. Please choose one of the below or press CTRL+C to cancel.", choice);
 
     ask_about_unassociated(unassociated)
-}
-
-fn handle_fresh_project(name: &str) -> Result<(), Box<dyn Error>> {
-    let location = locations::get_project_config_path(name)?;
-    fresh::init_project(name, &location)?;
-    Ok(())
 }

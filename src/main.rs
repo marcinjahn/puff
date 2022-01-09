@@ -1,7 +1,7 @@
 use std::error::Error;
 use clap::StructOpt;
 use cli_args::{Cli, Commands};
-use commands::init_command::init;
+use commands::{init_command, add_command};
 
 mod cli_args;
 mod app_init;
@@ -9,18 +9,19 @@ mod config;
 mod project_init;
 mod error;
 mod commands;
+mod secret_files;
 
 fn main() -> Result<(), Box<dyn Error>> {
     app_init::init()?;
     
     let args = Cli::parse();
 
-    match &args.command {
+    match args.command {
         Commands::Init => {
-            init()?;
+            init_command::init()?;
         },
-        Commands::Add { file: _ } => {
-            println!("FILE CHOSEN");
+        Commands::Add { file } => {
+            add_command::add_file(file)?;
         }
     }
 
