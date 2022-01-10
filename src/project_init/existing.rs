@@ -23,6 +23,7 @@ pub fn init_project(name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// Initializes the user's project directory with files managed by conman
 fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
     let managed_dir = locations::get_project_config_path(project_name)?;
     if is_empty_dir(&managed_dir)? {
@@ -46,6 +47,8 @@ fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), 
     Ok(())
 }
 
+/// Sets up a single file managed by conman to be accessible in user's project
+/// directory
 fn handle_existing_file(managed_file: &Path, user_dir: &Path) -> Result<(), Box<dyn Error>> {
     let managed_file_name = managed_file.file_name();
     if managed_file_name.is_none() {
