@@ -8,7 +8,7 @@ use std::{error::Error, fs, path::Path};
 /// Initializes a project that already exists in conman's configs
 /// directory. It updates conman's config file by adding that new project there.
 pub fn init_project(name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let managed_dir = locations::get_project_config_path(name)?;
+    let managed_dir = locations::get_managed_dir(name)?;
     if !managed_dir.exists() {
         return Err(Box::new(AppError(
             "The project folder does not exist in conman's configs".into(),
@@ -25,7 +25,7 @@ pub fn init_project(name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
 
 /// Initializes the user's project directory with files managed by conman
 fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let managed_dir = locations::get_project_config_path(project_name)?;
+    let managed_dir = locations::get_managed_dir(project_name)?;
     if is_empty_dir(&managed_dir)? {
         return Ok(());
     }
