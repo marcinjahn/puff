@@ -68,7 +68,7 @@ impl AppConfigManager {
     /// 
     /// WARNING: The is function modifies the config.json file, even though function's
     /// signature does not have any 'mut'.
-    pub fn add(&self, project_name: &str, project_path: &Path) -> Result<(), Box<dyn Error>> {
+    pub fn add(&self, project_name: &str, user_path: &Path) -> Result<(), Box<dyn Error>> {
         let mut config = self.get_config()?;
     
         if config.projects.iter().any(|p| p.name == project_name) {
@@ -80,7 +80,7 @@ impl AppConfigManager {
             )));
         }
     
-        config.projects.push(Project::new(project_name, project_path));
+        config.projects.push(Project::new(project_name, user_path));
         self.save_config(&config)?;
 
         Ok(())
