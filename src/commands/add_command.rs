@@ -1,15 +1,13 @@
 use std::{
     env,
     error::Error,
-    fs,
+    fs::{self, File},
     path::{Path, PathBuf},
 };
 
-use crate::{config::locations, error::AppError, secret_files};
+use crate::{config::locations, error::AppError};
 
 pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
-    // TODO: Handle a case when user tries to add a file that is already managed by conman - in such a case, do nothing
-
     if !user_file.is_absolute() {
         let cwd = env::current_dir()?;
         user_file = cwd.join(user_file);
@@ -38,15 +36,20 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
 
     if user_file.exists()
         && managed_file.exists()
-        && handle_conflicting_files(&user_file, &managed_file)
+        && handle_two_files(&user_file, &managed_file)
     {
         return Ok(());
     }
 
-    // TODO: Handle situation where managed_file exists and user_file doesn't
-    // The app should then create a link to existing managed_file and inform the user about it.
+    if !user_file.exists() && managed_file.exists() {
+        handle_only_managed_exists(managed_file, &user_file)?;
+    }
 
-    let project_name = secret_files::add_file(&user_file)?;
+    if user_file.exists() {
+        handle_only_user_file_exists(&user_file, &managed_dir)?;
+    } else {
+        handle_happy_path(&user_file, &managed_dir)?;
+    }
 
     println!(
         "The file {:?} has been added to the project named '{}'",
@@ -56,13 +59,20 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Tries to handle a situation where the file being added by the user already exists
+/// Handles a case where a file being added already exists in conamn (and not in
+/// user's directory).
+fn handle_only_managed_exists(managed_file: &Path, user_file: &Path) -> Result<(), Box<dyn Error>> {
+    symlink::symlink_file(managed_file, user_file)?;
+    Ok(())
+}
+
+/// Handles a situation where the file being added by the user already exists
 /// in both user's project directory and in conman's project directory. The following
-/// situations are covered: the file in user directory is a directory; the file in user
+/// cases are covered: the file in user directory is a directory; the file in user
 /// directory is already a valid conman symlink; the files in conman and user's directory
 /// are totally different. In all these cases function returns 'true', which means the
 /// program should terminate.
-fn handle_conflicting_files(user_file: &Path, managed_file: &Path) -> bool {
+fn handle_two_files(user_file: &Path, managed_file: &Path) -> bool {
     if let Ok(symlink_path) = fs::read_link(&user_file) {
         if symlink_path == managed_file {
             println!("The file {:?} has already been configured with conman and there's nothing more to do.", user_file);
@@ -88,4 +98,31 @@ fn handle_conflicting_files(user_file: &Path, managed_file: &Path) -> bool {
     }
 
     false
+}
+
+/// Handles a case where both user's directory and conamn have no file.  It will
+/// be created in conman and user's directory will have a symlink to it.
+fn handle_happy_path(user_file: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let file_name = user_file.file_name().unwrap();
+    let managed_file = managed_dir.join(file_name);
+
+    File::create(&managed_file)?;
+    symlink::symlink_file(managed_file, user_file)?;
+
+    Ok(())
+}
+
+/// Handles a case where a file being added already exists in user's directory.
+/// It will be moved to conman, and a softlink to it will be created in
+/// user's directory
+fn handle_only_user_file_exists(user_path: &Path, project_configs_path: &Path) -> Result<(), Box<dyn Error>> {
+    let file_name = user_path.file_name().unwrap();
+    let new_path = project_configs_path.join(file_name);
+
+    fs::copy(&user_path, &new_path)?;
+    fs::remove_file(user_path)?;
+
+    symlink::symlink_file(new_path, user_path)?;
+
+    Ok(())
 }
