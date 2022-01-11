@@ -9,7 +9,6 @@ mod config;
 mod project_init;
 mod error;
 mod commands;
-mod secret_files;
 mod fs_utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
