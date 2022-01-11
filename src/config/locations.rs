@@ -38,9 +38,9 @@ pub fn get_project_name_by_user_dir(user_dir: &Path) -> Result<String, Box<dyn E
     
     match config.projects.iter().find(|p| p.path == user_dir) {
         None => {
-            return Err(Box::new(AppError(
+            Err(Box::new(AppError(
                 "Parent directory of the provided file is not associated with any project known to conman. Did you initialize it with 'conman init'?".into(),
-            )));
+            )))
         },
         Some(project) => {
             Ok(project.name.clone())

@@ -22,7 +22,7 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
     let user_dir = user_file
         .parent()
         .ok_or("Could not retrieve user's project directory")?;
-    let project_name = locations::get_project_name_by_user_dir(&user_dir)?;
+    let project_name = locations::get_project_name_by_user_dir(user_dir)?;
     let managed_dir = locations::get_managed_dir(&project_name)?;
     let managed_file = &managed_dir.join(Path::new(file_name));
 
@@ -33,7 +33,7 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
         )));
     }
 
-    if user_file.exists() && managed_file.exists() && handle_two_files(&user_file, &managed_file) {
+    if user_file.exists() && managed_file.exists() && handle_two_files(&user_file, managed_file) {
         return Ok(());
     }
 
