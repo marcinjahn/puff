@@ -19,7 +19,7 @@ You can install the app locally using:
 
 ```sh
 git clone https://github.com/marcinjahn/conman
-cd conman
+cd marcinjahn/conman
 cargo install --path .
 ```
 
