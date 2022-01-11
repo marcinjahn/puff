@@ -33,7 +33,7 @@ fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), 
     for file in managed_dir.read_dir()? {
         match file {
             Ok(file) => {
-                handle_existing_file(&file.path(), &user_dir)?;
+                handle_existing_file(&file.path(), user_dir)?;
             }
             Err(_err) => {
                 return Err(Box::new(AppError(
