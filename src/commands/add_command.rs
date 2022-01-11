@@ -1,11 +1,10 @@
+use crate::{config::locations, error::AppError};
 use std::{
     env,
     error::Error,
     fs::{self, File},
     path::{Path, PathBuf},
 };
-
-use crate::{config::locations, error::AppError};
 
 pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
     if !user_file.is_absolute() {
@@ -34,10 +33,7 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
         )));
     }
 
-    if user_file.exists()
-        && managed_file.exists()
-        && handle_two_files(&user_file, &managed_file)
-    {
+    if user_file.exists() && managed_file.exists() && handle_two_files(&user_file, &managed_file) {
         return Ok(());
     }
 
@@ -115,7 +111,10 @@ fn handle_happy_path(user_file: &Path, managed_dir: &Path) -> Result<(), Box<dyn
 /// Handles a case where a file being added already exists in user's directory.
 /// It will be moved to conman, and a softlink to it will be created in
 /// user's directory
-fn handle_only_user_file_exists(user_path: &Path, project_configs_path: &Path) -> Result<(), Box<dyn Error>> {
+fn handle_only_user_file_exists(
+    user_path: &Path,
+    project_configs_path: &Path,
+) -> Result<(), Box<dyn Error>> {
     let file_name = user_path.file_name().unwrap();
     let new_path = project_configs_path.join(file_name);
 
