@@ -33,7 +33,8 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
         )));
     }
 
-    if user_file.exists() && managed_file.exists() && handle_two_files(&user_file, managed_file) {
+    if user_file.exists() && managed_file.exists() {
+        handle_two_files(&user_file, managed_file);
         return Ok(());
     }
 
@@ -68,11 +69,10 @@ fn handle_only_managed_exists(managed_file: &Path, user_file: &Path) -> Result<(
 /// directory is already a valid conman symlink; the files in conman and user's directory
 /// are totally different. In all these cases function returns 'true', which means the
 /// program should terminate.
-fn handle_two_files(user_file: &Path, managed_file: &Path) -> bool {
+fn handle_two_files(user_file: &Path, managed_file: &Path) {
     if let Ok(symlink_path) = fs::read_link(&user_file) {
         if symlink_path == managed_file {
             println!("The file {:?} has already been configured with conman and there's nothing more to do.", user_file);
-            return true;
         }
     }
 
@@ -83,17 +83,18 @@ fn handle_two_files(user_file: &Path, managed_file: &Path) -> bool {
                 "{:?} is a directory, which is invalid. Aborting.",
                 user_file
             );
-            return true;
         } else {
             println!(
                 "Both the project directory and conman have the file with the same name. Conman can't resolve that conflict. One way around it is to rename the file {:?} and run the command again. Conman will then set up {:?} to point to the file stored within conman registry. You will be able to modify it.",
                 user_file, user_file
             );
-            return true;
         }
+    } else {
+        println!(
+            "The file {:?} could not be accessed. Aborting.",
+            user_file
+        );
     }
-
-    false
 }
 
 /// Handles a case where both user's directory and conamn have no file.  It will
