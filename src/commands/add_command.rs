@@ -1,15 +1,18 @@
-use crate::{config::locations, error::AppError};
+use crate::{config::locations::LocationsProvider, error::AppError};
 use std::{
-    env,
     error::Error,
     fs::{self, File},
     path::{Path, PathBuf},
 };
 
-pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
+pub fn add_file(
+    mut user_file: PathBuf,
+    current_dir: &Path,
+    locations_provider: &LocationsProvider,
+) -> Result<(), Box<dyn Error>> {
     if !user_file.is_absolute() {
-        let cwd = env::current_dir()?;
-        user_file = cwd.join(user_file);
+        // let cwd = env::current_dir()?;
+        user_file = current_dir.join(user_file);
     }
 
     if user_file.is_dir() {
@@ -22,8 +25,8 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
     let user_dir = user_file
         .parent()
         .ok_or("Could not retrieve user's project directory")?;
-    let project_name = locations::get_project_name_by_user_dir(user_dir)?;
-    let managed_dir = locations::get_managed_dir(&project_name)?;
+    let project_name = locations_provider.get_project_name_by_user_dir(user_dir)?;
+    let managed_dir = locations_provider.get_managed_dir(&project_name);
     let managed_file = &managed_dir.join(Path::new(file_name));
 
     if !managed_dir.exists() {
@@ -56,7 +59,7 @@ pub fn add_file(mut user_file: PathBuf) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Handles a case where a file being added already exists in conamn (and not in
+/// Handles a case where a file being added already exists in conman (and not in
 /// user's directory).
 fn handle_only_managed_exists(managed_file: &Path, user_file: &Path) -> Result<(), Box<dyn Error>> {
     symlink::symlink_file(managed_file, user_file)?;
@@ -90,10 +93,7 @@ fn handle_two_files(user_file: &Path, managed_file: &Path) {
             );
         }
     } else {
-        println!(
-            "The file {:?} could not be accessed. Aborting.",
-            user_file
-        );
+        println!("The file {:?} could not be accessed. Aborting.", user_file);
     }
 }
 
