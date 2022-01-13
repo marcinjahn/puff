@@ -1,31 +1,34 @@
 use crate::{
-    config::{app_config::AppConfigManager, locations},
+    config::{app_config::AppConfigManager},
     error::AppError,
     fs_utils::{is_empty_dir, backup_file},
 };
 use std::{error::Error, fs, path::Path};
 
-/// Initializes a project that already exists in conman's configs
+
+pub struct ExistingProjectInitializer<'a> {
+    pub app_configuration_manager: &'a AppConfigManager
+}
+
+impl<'a> ExistingProjectInitializer<'a> {
+    /// Initializes a project that already exists in conman's configs
 /// directory. It updates conman's config file by adding that new project there.
-pub fn init_project(name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let managed_dir = locations::get_managed_dir(name)?;
+pub fn init_project(&self, name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
     if !managed_dir.exists() {
         return Err(Box::new(AppError(
             "The project folder does not exist in conman's configs".into(),
         )));
     }
 
-    let manager = AppConfigManager::new()?;
-    manager.add(name, user_dir)?;
+    self.app_configuration_manager.add(name, user_dir)?;
 
-    bring_in_existing_secrets(name, user_dir)?;
+    self.bring_in_existing_secrets(name, user_dir, managed_dir)?;
 
     Ok(())
 }
 
 /// Initializes the user's project directory with files managed by conman
-fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let managed_dir = locations::get_managed_dir(project_name)?;
+fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
     if is_empty_dir(&managed_dir)? {
         return Ok(());
     }
@@ -33,7 +36,7 @@ fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), 
     for file in managed_dir.read_dir()? {
         match file {
             Ok(file) => {
-                handle_existing_file(&file.path(), user_dir)?;
+                self.handle_existing_file(&file.path(), user_dir)?;
             }
             Err(_err) => {
                 return Err(Box::new(AppError(
@@ -49,7 +52,7 @@ fn bring_in_existing_secrets(project_name: &str, user_dir: &Path) -> Result<(), 
 
 /// Sets up a single file managed by conman to be accessible in user's project
 /// directory
-fn handle_existing_file(managed_file: &Path, user_dir: &Path) -> Result<(), Box<dyn Error>> {
+fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path) -> Result<(), Box<dyn Error>> {
     let managed_file_name = managed_file.file_name();
     if managed_file_name.is_none() {
         return Err(Box::new(AppError(format!(
@@ -74,3 +77,5 @@ fn handle_existing_file(managed_file: &Path, user_dir: &Path) -> Result<(), Box<
 
     Ok(())
 }
+}
+
