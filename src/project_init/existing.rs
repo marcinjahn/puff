@@ -84,7 +84,7 @@ impl<'a> ExistingProjectInitializer<'a> {
 mod tests {
     use std::fs::{File, self};
     use std::io::{Write, BufReader};
-    use std::path::{PathBuf, Path};
+    use std::path::{Path};
     use crate::config::app_config::{AppConfigManager, AppConfig};
     use super::ExistingProjectInitializer;
 

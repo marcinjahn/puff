@@ -69,10 +69,10 @@ impl<'a> ProjectsRetriever<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::config::app_config::{AppConfig, AppConfigManager, Project};
+    use crate::config::app_config::{AppConfig, Project};
     use crate::config::locations::LocationsProvider;
-    use std::fs::{self, File};
-    use std::io::Write;
+    use std::fs::{self};
+    
     use std::path::Path;
 
     use super::ProjectsRetriever;
