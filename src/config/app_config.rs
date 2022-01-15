@@ -1,10 +1,12 @@
+use crate::error::AppError;
 use serde::{Deserialize, Serialize};
 use std::{
     error::Error,
-    path::{Path, PathBuf}, fs::File, io::{BufReader, BufWriter},
+    fs::File,
+    io::{BufReader, BufWriter},
+    path::{Path, PathBuf},
 };
 use uuid::Uuid;
-use crate::{error::AppError};
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -25,7 +27,6 @@ pub struct Project {
 }
 
 impl Project {
-
     /// Creates a new instance of Project
     pub fn new(name: &str, user_dir: &Path) -> Project {
         Project {
@@ -40,7 +41,7 @@ impl Project {
 /// Any modifications of that file should go through this
 /// struct's functions.
 pub struct AppConfigManager {
-    pub config_file_path: PathBuf
+    pub config_file_path: PathBuf,
 }
 
 impl AppConfigManager {
@@ -65,21 +66,19 @@ impl AppConfigManager {
 
     /// Adds a new entry to the file. If an entry with the same 'name' already
     /// exists, an error will be returned.
-    /// 
+    ///
     /// WARNING: The is function modifies the config.json file, even though function's
     /// signature does not have any 'mut'.
-    pub fn add(&self, project_name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
+    pub fn add_project(&self, project_name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
         let mut config = self.get_config()?;
-    
+
         if config.projects.iter().any(|p| p.name == project_name) {
-            return Err(Box::new(AppError(
-                format!(
-                    "Conman's config.json file already contains a project named '{}'",
-                    project_name
-                ),
-            )));
+            return Err(Box::new(AppError(format!(
+                "Conman's config.json file already contains a project named '{}'",
+                project_name
+            ))));
         }
-    
+
         config.projects.push(Project::new(project_name, user_dir));
         self.save_config(&config)?;
 
@@ -93,5 +92,64 @@ impl AppConfigManager {
         serde_json::to_writer_pretty(writer, &config)?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs::File;
+    use std::io::Write;
+
+    use super::{AppConfigManager};
+
+    #[test]
+    fn get_config_there_are_zero_projects_proper_config_gets_returned() {
+        let base_dir = tempfile::tempdir().unwrap();
+        let config_file = base_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(file, "{{\"projects\":[]}}").unwrap();
+        // let (config_file, _) = prepare_sut_and_stuff();
+        let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
+
+        let config = config_manager.get_config().unwrap();
+
+        assert_eq!(0, config.projects.len());
+    }
+
+    #[test]
+    fn get_config_there_are_some_projects_proper_config_gets_returned() {
+        let base_dir = tempfile::tempdir().unwrap();
+        let config_file = base_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(file, "{{\"projects\":[{{\"name\":\"name1\", \"path\":\"path1\", \"id\":\"1\"}},{{\"name\":\"name2\", \"path\":\"path2\", \"id\":\"1\"}}]}}").unwrap();
+        // let (config_file, _) = prepare_sut_and_stuff();
+        let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
+
+        let config = config_manager.get_config().unwrap();
+
+        assert_eq!(2, config.projects.len());
+    }
+
+    #[test]
+    fn add_project_project_gets_added_to_file() {
+        let base_dir = tempfile::tempdir().unwrap();
+        let config_file = base_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(
+            file,
+            "{{\"projects\":[{{\"name\":\"name1\", \"path\":\"path1\", \"id\":\"1\"}}]}}"
+        )
+        .unwrap();
+        // let (config_file, _) = prepare_sut_and_stuff();
+        let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
+
+        let new_proj_dir = tempfile::tempdir().unwrap();
+        config_manager.add_project("new_proj", new_proj_dir.path()).unwrap();
+
+        let file = config_manager.get_config().unwrap();
+
+        assert_eq!(2, file.projects.len());
+
+        assert!(file.projects.iter().any(|p| p.name == "new_proj" && p.path.to_str() == new_proj_dir.path().to_str()));
     }
 }
