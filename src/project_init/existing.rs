@@ -155,16 +155,16 @@ mod tests {
         write!(file, "{content}").unwrap();
     }
 
-    fn prepare_sut_and_stuff<'a>() -> (PathBuf, tempfile::TempDir) {
-        let base_dir = tempfile::tempdir().unwrap();
-        let file_path = base_dir.path().join("config.json");
-        let mut file = File::create(&file_path).unwrap();
-        write!(file, "{{\"projects\":[]}}").unwrap();
+    // fn prepare_sut_and_stuff<'a>() -> (ExistingProjectInitializer<'a>, AppConfigManager, PathBuf, tempfile::TempDir) {
+    //     let base_dir = tempfile::tempdir().unwrap();
+    //     let file_path = base_dir.path().join("config.json");
+    //     let mut file = File::create(&file_path).unwrap();
+    //     write!(file, "{{\"projects\":[]}}").unwrap();
 
-        // let config_manager = AppConfigManager::new(file_path).unwrap();
+    //     let config_manager = Rc::new(AppConfigManager::new(file_path).unwrap());
 
-        // let sut = ExistingProjectInitializer::new(&config_manager);
+    //     let sut = ExistingProjectInitializer::new(config_manager.);
 
-        (file_path, base_dir)
-    }
+    //     (sut, config_manager, file_path, base_dir)
+    // }
 }
