@@ -1,4 +1,3 @@
-use crate::config::locations;
 use crate::config::{app_config::AppConfig, locations::LocationsProvider};
 use std::{
     error::Error,
@@ -6,24 +5,25 @@ use std::{
     io::Write,
 };
 
+/// Makes sure that config files required by conman exist on the host
 pub struct AppInitializer<'a> {
     pub locations_provider: &'a LocationsProvider,
 }
 
 impl<'a> AppInitializer<'a> {
+
+    /// Creates config dir and file if they don't exist
     pub fn init(&self) -> Result<(), Box<dyn Error>> {
-        let config_path = locations::get_base_config_path()?;
-        if !config_path.exists() {
-            self.create_app_files()?
+        let base_config_dir = self.locations_provider.get_base_config_path()?;
+        if !base_config_dir.exists() {
+            let base_config_dir = self.locations_provider.get_configs_config_path();
+            fs::create_dir_all(base_config_dir)?;
         }
-
-        Ok(())
-    }
-
-    fn create_app_files(&self) -> Result<(), Box<dyn Error>> {
-        let configs_path = self.locations_provider.get_configs_config_path();
-        fs::create_dir_all(configs_path)?;
-        self.create_config_file()?;
+        
+        let config_file_path = self.locations_provider.get_config_file_path();
+        if !config_file_path.exists() {
+            self.create_config_file()?;
+        }
 
         Ok(())
     }

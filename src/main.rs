@@ -1,7 +1,7 @@
 use app_init::AppInitializer;
 use clap::StructOpt;
 use cli_args::{Cli, Commands};
-use commands::{add_command::{self, AddCommand}, init_command::InitCommand};
+use commands::{add_command::{AddCommand}, init_command::InitCommand};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
