@@ -1,7 +1,7 @@
 use app_init::AppInitializer;
 use clap::StructOpt;
 use cli_args::{Cli, Commands};
-use commands::{add_command::{AddCommand}, init_command::InitCommand};
+use commands::{add_command::AddCommand, init_command::InitCommand};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
@@ -32,10 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         Commands::Init => {
-            let retriever = ProjectsRetriever {
-                app_config,
-                locations_provider: &locations_provider,
-            };
+            let retriever = ProjectsRetriever::new(app_config, &locations_provider);
             let cwd = env::current_dir()?;
 
             let command = InitCommand {
