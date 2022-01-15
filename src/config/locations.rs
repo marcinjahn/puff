@@ -18,11 +18,9 @@ impl LocationsProvider {
         LocationsProvider { config_base_path: base_config_path }
     }
 
-    // pub fn get_base_config_path() -> Result<PathBuf, Box<dyn Error>> {
-    //     let dirs = get_dirs()?;
-    //     let path = dirs.config_dir();
-    //     Ok(path.to_path_buf())
-    // }
+    pub fn get_base_config_path(&self) -> Result<PathBuf, Box<dyn Error>> {
+        Ok(self.config_base_path.clone())
+    }
     
     pub fn get_configs_config_path(&self) -> PathBuf {
         self.config_base_path.join(Path::new("configs"))
@@ -58,7 +56,7 @@ impl Default for LocationsProvider {
     }
 }
 
-pub fn get_base_config_path() -> Result<PathBuf, Box<dyn Error>> {
+fn get_base_config_path() -> Result<PathBuf, Box<dyn Error>> {
     match ProjectDirs::from("com", "marcinjahn", APP_NAME) {
         Some(dirs) => Ok(dirs.config_dir().to_owned()),
         None => Err(Box::new(AppError(
