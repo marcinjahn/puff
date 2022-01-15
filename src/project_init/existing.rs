@@ -1,18 +1,23 @@
 use crate::{
     config::{app_config::AppConfigManager},
     error::AppError,
-    fs_utils::{is_empty_dir, backup_file},
+    fs_utils::{backup_file},
 };
 use std::{error::Error, fs, path::Path};
 
 
+/// Initializes a project that already exists in conman's configs
+/// directory.
 pub struct ExistingProjectInitializer<'a> {
-    pub app_configuration_manager: &'a AppConfigManager
+    app_config_manager: &'a AppConfigManager
 }
 
 impl<'a> ExistingProjectInitializer<'a> {
-    /// Initializes a project that already exists in conman's configs
-    /// directory. It updates conman's config file by adding that new project there.
+    pub fn new(app_config_manager: &'a AppConfigManager) -> Self {
+        ExistingProjectInitializer { app_config_manager }
+    }
+
+    /// It updates conman's config file by adding that new project there.
     pub fn init_project(&self, name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
         if !managed_dir.exists() {
             return Err(Box::new(AppError(
@@ -20,7 +25,7 @@ impl<'a> ExistingProjectInitializer<'a> {
             )));
         }
 
-        self.app_configuration_manager.add(name, user_dir)?;
+        self.app_config_manager.add(name, user_dir)?;
 
         self.bring_in_existing_secrets(name, user_dir, managed_dir)?;
 
@@ -29,10 +34,6 @@ impl<'a> ExistingProjectInitializer<'a> {
 
     /// Initializes the user's project directory with files managed by conman
     fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
-        if is_empty_dir(&managed_dir)? {
-            return Ok(());
-        }
-
         for file in managed_dir.read_dir()? {
             match file {
                 Ok(file) => {
@@ -73,9 +74,97 @@ impl<'a> ExistingProjectInitializer<'a> {
                 file_in_user_dir.file_name().unwrap());
         }
 
-        symlink::symlink_file(managed_file, user_dir)?;
+        symlink::symlink_file(managed_file, file_in_user_dir)?;
 
         Ok(())
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use std::fs::{File, self};
+    use std::io::{Write, BufReader};
+    use std::path::{PathBuf, Path};
+    use crate::config::app_config::{AppConfigManager, AppConfig};
+    use super::ExistingProjectInitializer;
+
+    #[test]
+    fn init_project_gets_added_to_the_config_file() {
+        let base_dir = tempfile::tempdir().unwrap();
+        let config_file = base_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(file, "{{\"projects\":[]}}").unwrap();
+        // let (config_file, _) = prepare_sut_and_stuff();
+        let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
+        let sut = ExistingProjectInitializer::new(&config_manager);
+
+        let project_name = "some-project";
+        let user_dir = tempfile::tempdir().unwrap();
+        let managed_dir = tempfile::tempdir().unwrap();
+
+        sut.init_project(project_name, user_dir.path(), managed_dir.path()).unwrap();
+
+        let config_file = File::open(config_file).unwrap();
+        let reader = BufReader::new(config_file);
+        let config_file: AppConfig = serde_json::from_reader(reader).unwrap();
+        
+        assert_eq!(project_name, config_file.projects.first().unwrap().name);
+        assert_eq!(user_dir.path(), config_file.projects.first().unwrap().path);
+    }
+
+    #[test]
+    fn init_existing_secrets_get_symlinked_in_user_dir() {
+        let base_dir = tempfile::tempdir().unwrap();
+        let config_file = base_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(file, "{{\"projects\":[]}}").unwrap();
+        // let (config_file, _) = prepare_sut_and_stuff();
+        let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
+        let sut = ExistingProjectInitializer::new(&config_manager);
+
+        let project_name = "some-project";
+        let user_dir = tempfile::tempdir().unwrap();
+        let managed_dir = tempfile::tempdir().unwrap();
+
+        create_file(&managed_dir.path().join("file1"), "abc");
+        create_file(&managed_dir.path().join("file2"), "def");
+
+        sut.init_project(project_name, user_dir.path(), managed_dir.path()).unwrap();
+        
+        let mut symlinks = user_dir.path()
+            .read_dir().unwrap()
+            .map(|f| String::from(f.unwrap().path().to_str().unwrap()))
+            .collect::<Vec<String>>();
+        symlinks.sort();
+
+        assert_eq!(2, symlinks.len());
+
+        for (index, file) in symlinks.iter().enumerate() {
+            if let Ok(symlink_path) = fs::read_link(file) {
+                let index = index + 1;
+                assert_eq!(managed_dir.path().join(format!("file{index}")), symlink_path);
+            } else {
+                panic!("File is not a soft link")
+            }
+        }
+    
+    }
+
+    fn create_file(path: &Path, content: &str) {
+        let mut file = File::create(&path).unwrap();
+        write!(file, "{content}").unwrap();
+    }
+
+    fn prepare_sut_and_stuff<'a>() -> (PathBuf, tempfile::TempDir) {
+        let base_dir = tempfile::tempdir().unwrap();
+        let file_path = base_dir.path().join("config.json");
+        let mut file = File::create(&file_path).unwrap();
+        write!(file, "{{\"projects\":[]}}").unwrap();
+
+        // let config_manager = AppConfigManager::new(file_path).unwrap();
+
+        // let sut = ExistingProjectInitializer::new(&config_manager);
+
+        (file_path, base_dir)
+    }
+}

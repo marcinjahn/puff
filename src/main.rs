@@ -14,6 +14,7 @@ mod config;
 mod error;
 mod fs_utils;
 mod project_init;
+mod test_utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let locations_provider = LocationsProvider::default();
