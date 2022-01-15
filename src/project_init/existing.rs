@@ -25,7 +25,7 @@ impl<'a> ExistingProjectInitializer<'a> {
             )));
         }
 
-        self.app_config_manager.add(name, user_dir)?;
+        self.app_config_manager.add_project(name, user_dir)?;
 
         self.bring_in_existing_secrets(name, user_dir, managed_dir)?;
 

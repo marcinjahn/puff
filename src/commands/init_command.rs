@@ -43,7 +43,7 @@ impl<'a> InitCommand<'a> {
         }
 
         fs::create_dir_all(managed_dir)?;
-        self.app_config_manager.add(name, user_dir)?;
+        self.app_config_manager.add_project(name, user_dir)?;
 
         Ok(())
     }
