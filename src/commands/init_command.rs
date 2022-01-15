@@ -3,7 +3,7 @@ use crate::{
         app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
     },
     error::AppError,
-    project_init::existing::{ExistingProjectInitializer},
+    project_init::existing::ExistingProjectInitializer,
 };
 use std::{error::Error, fs, path::Path};
 
@@ -64,9 +64,7 @@ impl<'a> InitCommand<'a> {
                 self.init_fresh_project(&name, cwd)?;
             }
             UserChoice::Existing(name) => {
-                let existing_initializer = ExistingProjectInitializer {
-                    app_configuration_manager: self.app_config_manager,
-                };
+                let existing_initializer = ExistingProjectInitializer::new(self.app_config_manager);
                 existing_initializer.init_project(
                     name,
                     cwd,
@@ -108,7 +106,7 @@ impl<'a> InitCommand<'a> {
 
     fn ask_about_unassociated(
         &self,
-        unassociated: &'a[String],
+        unassociated: &'a [String],
     ) -> Result<UserChoice<'a>, Box<dyn Error>> {
         println!("0) Set up a fresh project");
         for (i, project) in unassociated.iter().enumerate() {
