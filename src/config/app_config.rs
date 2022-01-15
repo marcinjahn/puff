@@ -97,10 +97,10 @@ impl AppConfigManager {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
+    use std::{fs::File, path::Path};
     use std::io::Write;
 
-    use super::{AppConfigManager};
+    use super::{AppConfigManager, Project, AppConfig};
 
     #[test]
     fn get_config_there_are_zero_projects_proper_config_gets_returned() {
@@ -108,7 +108,6 @@ mod tests {
         let config_file = base_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(file, "{{\"projects\":[]}}").unwrap();
-        // let (config_file, _) = prepare_sut_and_stuff();
         let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
 
         let config = config_manager.get_config().unwrap();
@@ -122,7 +121,6 @@ mod tests {
         let config_file = base_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(file, "{{\"projects\":[{{\"name\":\"name1\", \"path\":\"path1\", \"id\":\"1\"}},{{\"name\":\"name2\", \"path\":\"path2\", \"id\":\"1\"}}]}}").unwrap();
-        // let (config_file, _) = prepare_sut_and_stuff();
         let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
 
         let config = config_manager.get_config().unwrap();
@@ -140,7 +138,6 @@ mod tests {
             "{{\"projects\":[{{\"name\":\"name1\", \"path\":\"path1\", \"id\":\"1\"}}]}}"
         )
         .unwrap();
-        // let (config_file, _) = prepare_sut_and_stuff();
         let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
 
         let new_proj_dir = tempfile::tempdir().unwrap();
@@ -149,7 +146,40 @@ mod tests {
         let file = config_manager.get_config().unwrap();
 
         assert_eq!(2, file.projects.len());
-
         assert!(file.projects.iter().any(|p| p.name == "new_proj" && p.path.to_str() == new_proj_dir.path().to_str()));
+    }
+
+    #[test]
+    fn save_config_config_gets_saved() {
+        let base_dir = tempfile::tempdir().unwrap();
+        let config_file = base_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(
+            file,
+            "{{\"projects\":[{{\"name\":\"name1\", \"path\":\"path1\", \"id\":\"1\"}}]}}"
+        )
+        .unwrap();
+        let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
+
+        let app_config = AppConfig {
+            projects: vec![
+                Project {
+                    name: String::from("proj1"),
+                    id: String::from("1"),
+                    path: Path::new(base_dir.path().to_str().unwrap()).to_path_buf(),
+                },
+                Project {
+                    name: String::from("proj2"),
+                    id: String::from("2"),
+                    path: Path::new(base_dir.path().to_str().unwrap()).to_path_buf(),
+                },
+            ],
+        };
+
+        config_manager.save_config(&app_config).unwrap();
+
+        let retrieved_config = config_manager.get_config().unwrap();
+
+        assert_eq!(2, retrieved_config.projects.len());
     }
 }
