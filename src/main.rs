@@ -1,7 +1,7 @@
 use app_init::AppInitializer;
 use clap::StructOpt;
 use cli_args::{Cli, Commands};
-use commands::{add_command, init_command::InitCommand};
+use commands::{add_command::{self, AddCommand}, init_command::InitCommand};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
@@ -46,7 +46,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Commands::Add { file } => {
             let cwd = env::current_dir()?;
-            add_command::add_file(file, &cwd, &locations_provider)?;
+            let command = AddCommand::new(&locations_provider);
+            command.add_file(file, &cwd)?;
         }
     }
 

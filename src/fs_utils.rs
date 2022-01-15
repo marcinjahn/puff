@@ -23,3 +23,19 @@ pub fn backup_file(file_path: &Path) -> Result<Option<String>, Box<dyn Error>> {
 
     Ok(Some(backup_path.to_str().unwrap().to_string()))
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::is_empty_dir;
+
+    #[test]
+    fn is_empty_dir_when_dir_is_empty_then_returns_true() {
+        let dir = tempfile::tempdir().unwrap();
+        
+        let result = is_empty_dir(dir.path());
+
+        assert!(result.unwrap());
+    }
+}

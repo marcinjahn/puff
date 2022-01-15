@@ -7,11 +7,6 @@ use crate::{
 };
 use std::{error::Error, fs, path::Path};
 
-enum UserChoice<'a> {
-    Fresh,
-    Existing(&'a str),
-}
-
 pub struct InitCommand<'a> {
     pub projects_retriever: &'a ProjectsRetriever<'a>,
     pub app_config_manager: &'a AppConfigManager,
@@ -140,4 +135,9 @@ impl<'a> InitCommand<'a> {
 
         self.ask_about_unassociated(unassociated)
     }
+}
+
+enum UserChoice<'a> {
+    Fresh,
+    Existing(&'a str),
 }
