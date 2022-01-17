@@ -1,11 +1,11 @@
 use app_init::AppInitializer;
 use cli_args::{AppArgs, Command};
-use commands::{add_command::AddCommand, init_command::InitCommand};
+use commands::{add_command::AddCommand, init_command::InitCommand, list_command::ListCommand};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
-use structopt::StructOpt;
 use std::{env, error::Error, path::Path};
+use structopt::StructOpt;
 
 mod app_init;
 mod cli_args;
@@ -20,12 +20,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = AppArgs::from_args();
 
     let locations_provider = match args.config_path.as_str() {
-        "default" => {
-            LocationsProvider::default()
-        },
-        other => {
-            LocationsProvider::new(Path::new(other).to_path_buf())
-        }
+        "default" => LocationsProvider::default(),
+        other => LocationsProvider::new(Path::new(other).to_path_buf()),
     };
 
     AppInitializer {
@@ -54,6 +50,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             let cwd = env::current_dir()?;
             let command = AddCommand::new(&locations_provider);
             command.add_file(file, &cwd)?;
+        }
+        Command::List(options) => {
+            let projects_retriever =
+                ProjectsRetriever::new(app_config.clone(), &locations_provider);
+            let command = ListCommand::new(&projects_retriever);
+            command.list(options.only_associated, options.only_unassociated)?;
         }
     }
 

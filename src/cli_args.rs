@@ -3,6 +3,7 @@ use structopt::StructOpt;
 
 #[derive(StructOpt)]
 pub struct AppArgs {
+    /// The path that conamn will treat as a base path for all its data storage (configs, projects)
     #[structopt(default_value = "default", env, hidden = true)]
     pub config_path: String,
 
@@ -24,4 +25,18 @@ pub enum Command {
 
     /// Initializes the project.
     Init,
+
+    /// Lists all projects known to conman (both associated and unassociated ones)
+    List(ListCommand)
+}
+
+#[derive(StructOpt)]
+pub struct ListCommand {
+    /// Retrieve only the unassociated projects
+    #[structopt(short = "u")]
+    pub only_unassociated: bool,
+
+    /// Retrieve only the associated projects
+    #[structopt(short = "a")]
+    pub only_associated: bool
 }
