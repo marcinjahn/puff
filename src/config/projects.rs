@@ -24,7 +24,11 @@ impl<'a> ProjectsRetriever<'a> {
     }
 
     pub fn get_associated_projects(&self) -> Vec<String> {
-        self.app_config.projects.iter().map(|p| p.name.clone()).collect::<Vec<String>>()
+        self.app_config
+            .projects
+            .iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<String>>()
     }
 
     /// Returns projects' names that exist in conman, but have not yet been associated
@@ -35,9 +39,10 @@ impl<'a> ProjectsRetriever<'a> {
 
         if all.len() < associated.len() {
             // TODO: What should user do in such scenario?
-            return Err(Box::new(AppError(format!(
+            return Err(Box::new(AppError(
                 "conman's config file is corrupted. It contains projects that do not exist."
-            ))));
+                    .to_string(),
+            )));
         }
 
         Ok(all
@@ -76,7 +81,7 @@ mod tests {
     use crate::config::app_config::{AppConfig, Project};
     use crate::config::locations::LocationsProvider;
     use std::fs::{self};
-    
+
     use std::path::Path;
 
     use super::ProjectsRetriever;
