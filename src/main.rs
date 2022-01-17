@@ -14,7 +14,6 @@ mod config;
 mod error;
 mod fs_utils;
 mod project_init;
-mod test_utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = AppArgs::from_args();
@@ -53,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Command::List(options) => {
             let projects_retriever =
-                ProjectsRetriever::new(app_config.clone(), &locations_provider);
+                ProjectsRetriever::new(app_config, &locations_provider);
             let command = ListCommand::new(&projects_retriever);
             command.list(options.only_associated, options.only_unassociated)?;
         }

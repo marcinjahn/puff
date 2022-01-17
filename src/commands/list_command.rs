@@ -17,28 +17,31 @@ impl<'a> ListCommand<'a> {
         only_unassociated: bool,
     ) -> Result<(), Box<dyn Error>> {
         if only_associated && only_unassociated {
-            return Err(Box::new(AppError(format!(
-                "The --only-associated (-a) and --only-unassociated (-u) flags cannot be both set to true"
-            ))));
+            return Err(Box::new(AppError(
+                "The --only-associated (-a) and --only-unassociated (-u) flags cannot be both set to true".to_string()
+            )));
         }
 
-        println!("");
+        let mut print_newline = false;
 
         if only_associated || !only_unassociated {
             let associated = self.get_associated_proj();
-            if associated.len() != 0 {
+            if !associated.is_empty() {
+                print_newline = true;
                 println!("ASSOCIATED PROJECTS:");
                 for proj in associated {
                     println!("{proj}");
                 }
-                println!("");
             }
         }
 
         if only_unassociated || !only_associated {
             let unassociated = self.get_unassociationed_proj()?;
+            if !unassociated.is_empty() {
+                if print_newline {
+                    println!()
+                }
 
-            if unassociated.len() != 0 {
                 println!("UNASSOCIATED PROJECTS:");
                 for proj in unassociated {
                     println!("{proj}");
@@ -54,6 +57,6 @@ impl<'a> ListCommand<'a> {
     }
 
     fn get_unassociationed_proj(&self) -> Result<Vec<String>, Box<dyn Error>> {
-        Ok(self.projects_retriever.get_unassociated_projects()?)
+        self.projects_retriever.get_unassociated_projects()
     }
 }

@@ -15,7 +15,7 @@ pub struct InitCommand<'a> {
 
 impl<'a> InitCommand<'a> {
     pub fn init(&self, cwd: &Path) -> Result<(), Box<dyn Error>> {
-        if self.projects_retriever.is_associated(&cwd)? {
+        if self.projects_retriever.is_associated(cwd)? {
             return Err(Box::new(AppError(
                 "This project is already configured in conman".into(),
             )));
@@ -23,9 +23,9 @@ impl<'a> InitCommand<'a> {
 
         let unassociated = self.projects_retriever.get_unassociated_projects()?;
         if !unassociated.is_empty() {
-            self.handle_with_unassociated(unassociated, &cwd)?;
+            self.handle_with_unassociated(unassociated, cwd)?;
         } else {
-            let name = self.get_fresh_project_name(&cwd)?;
+            let name = self.get_fresh_project_name(cwd)?;
             self.init_fresh_project(&name, cwd)?;
         }
 

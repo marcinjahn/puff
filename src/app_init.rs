@@ -49,9 +49,8 @@ impl<'a> AppInitializer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::{path::PathBuf, fs};
 
-    use crate::test_utils::config::get_config_without_whitespace;
     use crate::config::locations::LocationsProvider;
     use super::AppInitializer;
 
@@ -94,4 +93,13 @@ mod tests {
         }
         (LocationsProvider::new(path.to_path_buf()), path, dir)
     }
+
+    fn get_config_without_whitespace(path: PathBuf) -> String {
+        fs::read_to_string(path)
+            .unwrap()
+            .replace("\n", "")
+            .replace("\r", "")
+            .replace(" ", "")
+    }
+    
 }

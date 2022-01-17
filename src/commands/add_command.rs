@@ -183,8 +183,7 @@ mod tests {
         let mut file = File::create(&config_file).unwrap();
         write!(
             file,
-            "{{\"projects\":[{{\"name\":\"{}\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
-            "proj1",
+            "{{\"projects\":[{{\"name\":\"proj1\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
             current_dir.path().to_str().unwrap()
         )
         .unwrap();

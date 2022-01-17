@@ -1,10 +1,5 @@
 use std::{path::Path, error::Error, fs};
 
-/// checks if a directory is empty
-pub fn is_empty_dir(path: &Path) -> Result<bool, Box<dyn Error>> {
-    Ok(path.read_dir()?.next().is_none())
-}
-
 /// Creates a backup of a file in the same directory. It adds ".bak"
 /// suffix to the backup file. If it creates a conflict "1"s will be
 /// added to the name until there is no conflict.
@@ -34,37 +29,8 @@ mod tests {
     use std::fs::File;
     use std::fs;
 
-    use super::{is_empty_dir, backup_file};
+    use super::backup_file;
     use std::io::Write;
-
-    #[test]
-    fn is_empty_dir_when_dir_is_empty_then_returns_true() {
-        let dir = tempfile::tempdir().unwrap();
-        
-        let result = is_empty_dir(dir.path()).unwrap();
-
-        assert!(result);
-    }
-
-    #[test]
-    fn is_empty_dir_when_dir_is_not_empty_then_returns_false() {
-        let dir = tempfile::tempdir().unwrap();
-        let _file = File::create(dir.path().join("some-file")).unwrap();
-        
-        let result = is_empty_dir(dir.path()).unwrap();
-
-        assert!(!result);
-    }
-
-    #[test]
-    fn is_empty_dir_when_dir_doesnt_exist_then_err_is_returned() {
-        let dir = tempfile::tempdir().unwrap();
-        let non_existing_dir = dir.path().join("i-dont-exist");
-        
-        let result = is_empty_dir(&non_existing_dir);
-
-        result.unwrap_err();
-    }
 
     #[test]
     fn backup_file_when_source_file_does_not_exist_then_err_is_returned() {
