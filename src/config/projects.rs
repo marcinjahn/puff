@@ -23,6 +23,10 @@ impl<'a> ProjectsRetriever<'a> {
         Ok(false)
     }
 
+    pub fn get_associated_projects(&self) -> Vec<String> {
+        self.app_config.projects.iter().map(|p| p.name.clone()).collect::<Vec<String>>()
+    }
+
     /// Returns projects' names that exist in conman, but have not yet been associated
     /// with any user's directory
     pub fn get_unassociated_projects(&self) -> Result<Vec<String>, Box<dyn Error>> {
@@ -236,4 +240,6 @@ mod tests {
 
         assert_eq!(0, result.len());
     }
+
+    // TODO: Test get_associated_projects fn
 }

@@ -8,7 +8,7 @@ use std::{
 };
 use uuid::Uuid;
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct AppConfig {
     pub projects: Vec<Project>,
 }
