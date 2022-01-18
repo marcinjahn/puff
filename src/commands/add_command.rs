@@ -1,4 +1,4 @@
-use crate::{config::locations::LocationsProvider, error::AppError};
+use crate::{config::locations::LocationsProvider, error::AppError, git_ignore::{GitIgnoreHandler, GitIgnoreResult}};
 use std::{
     error::Error,
     fs::{self, File},
@@ -16,11 +16,12 @@ impl<'a> AddCommand<'a> {
     }
 
     /// Adds new file to conman. A project needs to exist prior to invoking
-    /// that command.
+    /// that command. Optionally the file may be added to .gitignore.
     pub fn add_file(
         &self,
         mut user_file: PathBuf,
         current_dir: &Path,
+        add_to_git_ignore: bool,
     ) -> Result<(), Box<dyn Error>> {
         if !user_file.is_absolute() {
             user_file = current_dir.join(user_file);
@@ -65,10 +66,24 @@ impl<'a> AddCommand<'a> {
             AddCommand::handle_fresh_file(&user_file, &managed_dir)?;
         }
 
+        let mut git_ignore_result: Option<GitIgnoreResult> = None;
+        if add_to_git_ignore {
+            let handler = GitIgnoreHandler::new();
+            git_ignore_result = Some(handler.add_to_git_ignore(
+                user_dir,
+                file_name.to_str().ok_or("File name could not be parsed")?)?,
+            );
+        }
+
         println!(
             "The file {:?} has been added to the project named '{}'",
             file_name, project_name
         );
+        if let Some(git_ignore_result) = git_ignore_result {
+            println!(
+                ".gitignore file has been {git_ignore_result}"
+            );
+        }
 
         Ok(())
     }
@@ -164,7 +179,7 @@ mod tests {
         let user_file = current_dir.path().join("file");
         let mut file = File::create(&user_file).unwrap();
         write!(file, "some content").unwrap();
-        let result = sut.add_file(user_file, current_dir.path());
+        let result = sut.add_file(user_file, current_dir.path(), false);
 
         assert!(result.is_err());
         // TODO: Use proper error kinds and check that
@@ -190,6 +205,6 @@ mod tests {
 
         let sut = AddCommand::new(&locations_provider);
 
-        sut.add_file(user_file, current_dir.path()).unwrap();
+        sut.add_file(user_file, current_dir.path(), false).unwrap();
     }
 }
