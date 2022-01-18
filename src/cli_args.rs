@@ -17,9 +17,13 @@ pub struct AppArgs {
     about = "A configuration manager that keeps private configuration files from various projects in a central directory so that they can be easily synced between different dev machines."
 )]
 pub enum Command {
+    /// Initializes the project.
+    Init,
+
     /// Adds a new file to be tracked by conman in this project.
     /// If the file does not exist, it will be created.
     Add {
+        /// File to be added
         file: PathBuf, // TODO: Vec<PathBuf>
 
         /// Adds the new file to .gitignore (.gitignre will be created if it doesn't exist)
@@ -27,8 +31,16 @@ pub enum Command {
         git_ignore: bool
     },
 
-    /// Initializes the project.
-    Init,
+    /// Removes a file from conman. The file will stay in
+    /// project's directory unless the --delete flag is added
+    Rm {
+        /// File to be removed from conman
+        file: PathBuf,
+
+        /// Removes the file from the host
+        #[structopt(short = "d", long = "delete")]
+        delete_file: bool
+    },
 
     /// Lists all projects known to conman (both associated and unassociated ones)
     List(ListCommand)

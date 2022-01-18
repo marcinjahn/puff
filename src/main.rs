@@ -1,6 +1,6 @@
 use app_init::AppInitializer;
 use cli_args::{AppArgs, Command};
-use commands::{add_command::AddCommand, init_command::InitCommand, list_command::ListCommand};
+use commands::{add_command::AddCommand, init_command::InitCommand, list_command::ListCommand, rm_command::RmCommand};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
@@ -57,6 +57,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             let command = ListCommand::new(&projects_retriever);
             command.list(options.only_associated, options.only_unassociated)?;
         }
+        Command::Rm { file, delete_file } => {
+            let cwd = env::current_dir()?;
+            let projects_retriever =
+                ProjectsRetriever::new(app_config, &locations_provider);
+            let command = RmCommand::new(&locations_provider, &projects_retriever);
+            command.remove_file(file, &cwd, delete_file)?;
+        },
     }
 
     Ok(())
