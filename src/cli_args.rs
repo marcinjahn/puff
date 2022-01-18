@@ -21,6 +21,10 @@ pub enum Command {
     /// If the file does not exist, it will be created.
     Add {
         file: PathBuf, // TODO: Vec<PathBuf>
+
+        /// Adds the new file to .gitignore (.gitignre will be created if it doesn't exist)
+        #[structopt(short = "g", long = "git-ignore")]
+        git_ignore: bool
     },
 
     /// Initializes the project.

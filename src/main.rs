@@ -14,6 +14,7 @@ mod config;
 mod error;
 mod fs_utils;
 mod project_init;
+mod git_ignore;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = AppArgs::from_args();
@@ -45,10 +46,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             };
             command.init(&cwd)?;
         }
-        Command::Add { file } => {
+        Command::Add { file, git_ignore } => {
             let cwd = env::current_dir()?;
             let command = AddCommand::new(&locations_provider);
-            command.add_file(file, &cwd)?;
+            command.add_file(file, &cwd, git_ignore)?;
         }
         Command::List(options) => {
             let projects_retriever =
