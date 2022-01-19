@@ -119,12 +119,12 @@ impl<'a> InitCommand<'a> {
         let mut choice = String::new();
         std::io::stdin().read_line(&mut choice)?;
 
-        if choice == "0" {
+        if choice == "0\n" {
             return Ok(UserChoice::Fresh);
         }
 
         for (i, project) in unassociated.iter().enumerate() {
-            if choice == (i + 1).to_string() {
+            if choice == ((i + 1).to_string() + "\n") {
                 return Ok(UserChoice::Existing(project));
             }
         }
