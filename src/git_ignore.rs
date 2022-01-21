@@ -51,7 +51,7 @@ impl GitIgnoreHandler {
             .append(true)
             .open(dir.join(".gitignore"))?;
 
-        writeln!(file, "")?; // to make sure we're not appending to some non-empty line
+        writeln!(file)?; // to make sure we're not appending to some non-empty line
         writeln!(file, "{file_to_ignore}")?;
 
         Ok(())

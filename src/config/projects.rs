@@ -1,6 +1,14 @@
-use super::{app_config::AppConfig, locations::LocationsProvider};
+use super::{
+    app_config::AppConfig,
+    locations::LocationsProvider,
+};
 use crate::error::AppError;
-use std::{error::Error, fs, path::Path};
+use std::{
+    error::Error,
+    ffi::OsString,
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub struct ProjectsRetriever<'a> {
     app_config: AppConfig,
@@ -21,6 +29,37 @@ impl<'a> ProjectsRetriever<'a> {
         }
 
         Ok(false)
+    }
+
+    pub fn get_details(
+        &self,
+        project_name: &str,
+    ) -> Result<Option<ProjectDetails>, Box<dyn Error>> {
+        let project_config = self
+            .app_config
+            .projects
+            .iter()
+            .find(|p| p.name == project_name);
+
+        let managed_dir = self.locations_provider.get_managed_dir(project_name);
+        if !managed_dir.exists() {
+            return Err(Box::new(AppError(
+                format!("Project '{project_name}' doesn't exist"),
+            )));
+        }
+
+        let mut files = vec![];
+        for file in fs::read_dir(&managed_dir)? {
+            let file = file?;
+            files.push(file.file_name());
+        }
+
+        Ok(Some(ProjectDetails {
+            name: project_name.to_owned(),
+            managed_dir,
+            user_dir: project_config.map(|config| config.path.clone()),
+            files,
+        }))
     }
 
     pub fn get_associated_projects(&self) -> Vec<String> {
@@ -74,6 +113,13 @@ impl<'a> ProjectsRetriever<'a> {
 
         Ok(projects)
     }
+}
+
+pub struct ProjectDetails {
+    pub name: String,
+    pub managed_dir: PathBuf,
+    pub user_dir: Option<PathBuf>,
+    pub files: Vec<OsString>,
 }
 
 #[cfg(test)]

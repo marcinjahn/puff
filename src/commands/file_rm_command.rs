@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     config::{locations::LocationsProvider, projects::ProjectsRetriever},
-    error::AppError,
+    error::AppError, fs_utils::is_symlink,
 };
 
 pub struct RmCommand<'a> {
@@ -59,7 +59,7 @@ impl<'a> RmCommand<'a> {
             )));
         }
 
-        if user_file.exists() && !self.is_symlink(&user_file)? {
+        if user_file.exists() && !is_symlink(&user_file)? {
             return Err(Box::new(AppError(
                 "The provided file is not managed by conman. Conman must have been configured with some previous version of that file that has been deleted since then. Deal with that file first and then invoke the \"rm\" command again to remove the version that conman has stored."
                     .into(),
@@ -79,12 +79,6 @@ impl<'a> RmCommand<'a> {
 
         println!("The file {file_name:?} has been removed from the project {project_name}");
         Ok(())
-    }
-
-    fn is_symlink(&self, user_file: &Path) -> Result<bool, Box<dyn Error>> {
-        let metadata = fs::symlink_metadata(user_file)?;
-
-        Ok(metadata.is_symlink())
     }
 
     /// Checks whether a file has even beed aded to conman

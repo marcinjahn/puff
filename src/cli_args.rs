@@ -43,11 +43,14 @@ pub enum Command {
     },
 
     /// Lists all projects known to conman (both associated and unassociated ones)
-    List(ListCommand)
+    List(ListSubcommand),
+
+    /// Subcommand for managing projects
+    Project(ProjectSubcommand)
 }
 
 #[derive(StructOpt)]
-pub struct ListCommand {
+pub struct ListSubcommand {
     /// Retrieve only the unassociated projects
     #[structopt(short = "u")]
     pub only_unassociated: bool,
@@ -55,4 +58,27 @@ pub struct ListCommand {
     /// Retrieve only the associated projects
     #[structopt(short = "a")]
     pub only_associated: bool
+}
+
+#[derive(StructOpt)]
+pub enum ProjectSubcommand {
+
+    /// Removes a project. By default, all project's files managed by conman will be moved into the associated path (if the project is associated with any path)
+    Rm(ProjectRmSubcommand)
+}
+
+
+#[derive(StructOpt)]
+pub struct ProjectRmSubcommand {
+    /// Project to remove
+    #[structopt()]
+    pub project_name: String, // TODO: Vec<PathBuf>
+
+    /// Deletes the managed files from the filesystem
+    #[structopt(short = "d", long = "delete-files")]
+    pub delete_files: bool,
+
+    /// Skips the Y/N question
+    #[structopt(short = "y")]
+    pub skip_confirmation: bool
 }
