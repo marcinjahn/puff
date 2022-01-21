@@ -1,6 +1,6 @@
 use app_init::AppInitializer;
 use cli_args::{AppArgs, Command};
-use commands::{add_command::AddCommand, init_command::InitCommand, list_command::ListCommand, rm_command::RmCommand};
+use commands::{add_command::AddCommand, init_command::InitCommand, list_command::ListCommand, file_rm_command::RmCommand, project_rm_command::ProjectRmCommand};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
@@ -15,6 +15,7 @@ mod error;
 mod fs_utils;
 mod project_init;
 mod git_ignore;
+mod io_utils;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = AppArgs::from_args();
@@ -63,6 +64,18 @@ fn main() -> Result<(), Box<dyn Error>> {
                 ProjectsRetriever::new(app_config, &locations_provider);
             let command = RmCommand::new(&locations_provider, &projects_retriever);
             command.remove_file(file, &cwd, delete_file)?;
+        },
+        Command::Project(subcommand) => {
+
+            match subcommand {
+                cli_args::ProjectSubcommand::Rm(details) => {
+                    let projects_retriever =
+                    ProjectsRetriever::new(app_config, &locations_provider);
+                    let command = ProjectRmCommand::new(&projects_retriever, &app_config_manager);
+                    command.remove_project(details.project_name, details.delete_files, details.skip_confirmation)?;
+                }
+            }
+
         },
     }
 

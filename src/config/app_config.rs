@@ -93,6 +93,20 @@ impl AppConfigManager {
 
         Ok(())
     }
+
+    pub(crate) fn remove_project(&self, name: &str) -> Result<(), Box<dyn Error>> {
+        let mut config = self.get_config()?;
+
+        let index = config.projects.iter().position(|p| p.name == name);
+        if index.is_none() {
+            return Ok(());
+        }
+
+        config.projects.remove(index.unwrap());
+        self.save_config(&config)?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
