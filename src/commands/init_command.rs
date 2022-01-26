@@ -17,7 +17,7 @@ impl<'a> InitCommand<'a> {
     pub fn init(&self, cwd: &Path) -> Result<(), Box<dyn Error>> {
         if self.projects_retriever.is_associated(cwd)? {
             return Err(Box::new(AppError(
-                "This project is already configured in conman".into(),
+                "This project is already configured in puff".into(),
             )));
         }
 
@@ -29,7 +29,7 @@ impl<'a> InitCommand<'a> {
             self.init_fresh_project(&name, cwd)?;
         }
 
-        println!("Project has been set up with conman");
+        println!("Project has been set up with puff");
 
         Ok(())
     }
@@ -38,7 +38,7 @@ impl<'a> InitCommand<'a> {
         let managed_dir = self.locations_provider.get_managed_dir(name);
         if managed_dir.exists() {
             return Err(Box::new(AppError(
-                "The project folder already exists in conman's configs".into(),
+                "The project folder already exists in puff's configs".into(),
             )));
         }
 
@@ -53,7 +53,7 @@ impl<'a> InitCommand<'a> {
         unassociated: Vec<String>,
         cwd: &Path,
     ) -> Result<(), Box<dyn Error>> {
-        println!("conman has a few projects that are still not associated with any path on your machine. Do you want");
+        println!("puff has a few projects that are still not associated with any path on your machine. Do you want");
         println!(
             "to associate one of them with the current path, or do you want to set up a fresh project?"
         );

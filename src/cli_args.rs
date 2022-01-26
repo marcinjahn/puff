@@ -13,14 +13,14 @@ pub struct AppArgs {
 
 #[derive(StructOpt)]
 #[structopt(
-    name = "conman",
+    name = "puff",
     about = "A configuration manager that keeps private configuration files from various projects in a central directory so that they can be easily synced between different dev machines."
 )]
 pub enum Command {
     /// Initializes the project.
     Init,
 
-    /// Adds a new file to be tracked by conman in this project.
+    /// Adds a new file to be tracked by puff in this project.
     /// If the file does not exist, it will be created.
     Add {
         /// File to be added
@@ -31,10 +31,10 @@ pub enum Command {
         git_ignore: bool
     },
 
-    /// Removes a file from conman. The file will stay in
+    /// Removes a file from puff. The file will stay in
     /// project's directory unless the --delete flag is added
     Rm {
-        /// File to be removed from conman
+        /// File to be removed from puff
         file: PathBuf,
 
         /// Removes the file from the host
@@ -42,7 +42,7 @@ pub enum Command {
         delete_file: bool
     },
 
-    /// Lists all projects known to conman (both associated and unassociated ones)
+    /// Lists all projects known to puff (both associated and unassociated ones)
     List(ListSubcommand),
 
     /// Subcommand for managing projects
@@ -63,7 +63,7 @@ pub struct ListSubcommand {
 #[derive(StructOpt)]
 pub enum ProjectSubcommand {
 
-    /// Removes a project. By default, all project's files managed by conman will be moved into the associated path (if the project is associated with any path)
+    /// Removes a project. By default, all project's files managed by puff will be moved into the associated path (if the project is associated with any path)
     Rm(ProjectRmSubcommand)
 }
 

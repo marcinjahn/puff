@@ -37,7 +37,7 @@ impl Project {
     }
 }
 
-/// A manager of conman's configuration file config.json.
+/// A manager of puff's configuration file config.json.
 /// Any modifications of that file should go through this
 /// struct's functions.
 pub struct AppConfigManager {
@@ -48,7 +48,7 @@ impl AppConfigManager {
     pub fn new(config_file_path: PathBuf) -> Result<AppConfigManager, Box<dyn Error>> {
         if !config_file_path.exists() {
             return Err(Box::new(AppError(
-                "Conman's config.json file does not exist".into(),
+                "puff's config.json file does not exist".into(),
             )));
         }
 
@@ -74,7 +74,7 @@ impl AppConfigManager {
 
         if config.projects.iter().any(|p| p.name == project_name) {
             return Err(Box::new(AppError(format!(
-                "Conman's config.json file already contains a project named '{}'",
+                "puff's config.json file already contains a project named '{}'",
                 project_name
             ))));
         }

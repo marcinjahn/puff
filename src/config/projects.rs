@@ -70,7 +70,7 @@ impl<'a> ProjectsRetriever<'a> {
             .collect::<Vec<String>>()
     }
 
-    /// Returns projects' names that exist in conman, but have not yet been associated
+    /// Returns projects' names that exist in puff, but have not yet been associated
     /// with any user's directory
     pub fn get_unassociated_projects(&self) -> Result<Vec<String>, Box<dyn Error>> {
         let all = self.get_all_projects()?;
@@ -79,7 +79,7 @@ impl<'a> ProjectsRetriever<'a> {
         if all.len() < associated.len() {
             // TODO: What should user do in such scenario?
             return Err(Box::new(AppError(
-                "conman's config file is corrupted. It contains projects that do not exist."
+                "puff's config file is corrupted. It contains projects that do not exist."
                     .to_string(),
             )));
         }
@@ -91,7 +91,7 @@ impl<'a> ProjectsRetriever<'a> {
             .collect::<Vec<_>>())
     }
 
-    /// Returns names of all the projects that conman stores (some of them might
+    /// Returns names of all the projects that puff stores (some of them might
     /// not be associated yet)
     fn get_all_projects(&self) -> Result<Vec<String>, Box<dyn Error>> {
         let location = self.locations_provider.get_configs_config_path();

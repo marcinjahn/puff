@@ -6,7 +6,7 @@ use crate::{
 use std::{error::Error, fs, path::Path};
 
 
-/// Initializes a project that already exists in conman's configs
+/// Initializes a project that already exists in puff's configs
 /// directory.
 pub struct ExistingProjectInitializer<'a> {
     app_config_manager: &'a AppConfigManager
@@ -17,11 +17,11 @@ impl<'a> ExistingProjectInitializer<'a> {
         ExistingProjectInitializer { app_config_manager }
     }
 
-    /// It updates conman's config file by adding that new project there.
+    /// It updates puff's config file by adding that new project there.
     pub fn init_project(&self, name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
         if !managed_dir.exists() {
             return Err(Box::new(AppError(
-                "The project folder does not exist in conman's configs".into(),
+                "The project folder does not exist in puff's configs".into(),
             )));
         }
 
@@ -32,7 +32,7 @@ impl<'a> ExistingProjectInitializer<'a> {
         Ok(())
     }
 
-    /// Initializes the user's project directory with files managed by conman
+    /// Initializes the user's project directory with files managed by puff
     fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
         for file in managed_dir.read_dir()? {
             match file {
@@ -51,7 +51,7 @@ impl<'a> ExistingProjectInitializer<'a> {
         Ok(())
     }
 
-    /// Sets up a single file managed by conman to be accessible in user's project
+    /// Sets up a single file managed by puff to be accessible in user's project
     /// directory
     fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path) -> Result<(), Box<dyn Error>> {
         let managed_file_name = managed_file.file_name();
@@ -67,7 +67,7 @@ impl<'a> ExistingProjectInitializer<'a> {
         if file_in_user_dir.exists() {
             let backup = backup_file(&file_in_user_dir)?;
             fs::remove_file(&file_in_user_dir)?;
-            println!("Both the initialized directory and conman had the file {:?}. A backup of the file {:?} had been created under {}. Currently, {:?} points to the file that was present in conman. Remember to deal somehow with the backup file, probably you don't want it to end up in your remote repository (if you use it for this project).", 
+            println!("Both the initialized directory and puff had the file {:?}. A backup of the file {:?} had been created under {}. Currently, {:?} points to the file that was present in puff. Remember to deal somehow with the backup file, probably you don't want it to end up in your remote repository (if you use it for this project).", 
                 managed_file.file_name().unwrap(), 
                 &file_in_user_dir, 
                 backup.unwrap(), 

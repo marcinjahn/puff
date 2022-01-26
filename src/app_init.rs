@@ -6,7 +6,7 @@ use std::{
     path::Path,
 };
 
-/// Makes sure that config files required by conman exist on the host
+/// Makes sure that config files required by puff exist on the host
 pub struct AppInitializer<'a> {
     pub locations_provider: &'a LocationsProvider,
 }

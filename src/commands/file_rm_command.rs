@@ -54,14 +54,14 @@ impl<'a> RmCommand<'a> {
 
         if !self.is_file_added(user_dir, &project_name, file_name)? {
             return Err(Box::new(AppError(
-                "The provided file does not belong to any associated project known to conman"
+                "The provided file does not belong to any associated project known to puff"
                     .into(),
             )));
         }
 
         if user_file.exists() && !is_symlink(&user_file)? {
             return Err(Box::new(AppError(
-                "The provided file is not managed by conman. Conman must have been configured with some previous version of that file that has been deleted since then. Deal with that file first and then invoke the \"rm\" command again to remove the version that conman has stored."
+                "The provided file is not managed by puff. puff must have been configured with some previous version of that file that has been deleted since then. Deal with that file first and then invoke the \"rm\" command again to remove the version that puff has stored."
                     .into(),
             )));
         }
@@ -81,7 +81,7 @@ impl<'a> RmCommand<'a> {
         Ok(())
     }
 
-    /// Checks whether a file has even beed aded to conman
+    /// Checks whether a file has even beed aded to puff
     fn is_file_added(
         &self,
         user_dir: &Path,
