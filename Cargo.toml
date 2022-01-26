@@ -1,7 +1,15 @@
 [package]
 name = "conman"
+description = "conman is a CLI tool that manages private configuration/secret files of your dev projects"
 version = "0.1.0"
 edition = "2021"
+authors = ["Marcin Jahn <marcinj10@gmail.com>"]
+readme = "README.md"
+homepage = "https://marcinjahn.com"
+repository = "https://github.com/marcinjahn/conman"
+license = "Apache-2.0"
+keywords = ["configuration", "secret", "management", "environment", "cli"]
+categories = ["command-line-utilities", "config", "development-tools", "filesystem"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
