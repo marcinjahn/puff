@@ -1,12 +1,12 @@
 [package]
-name = "conman"
-description = "conman is a CLI tool that manages private configuration/secret files of your dev projects"
+name = "puff"
+description = "puff is a CLI tool that manages private configuration/secret files of your dev projects"
 version = "0.1.0"
 edition = "2021"
 authors = ["Marcin Jahn <marcinj10@gmail.com>"]
 readme = "README.md"
-homepage = "https://marcinjahn.com"
-repository = "https://github.com/marcinjahn/conman"
+homepage = "https://marcinjahn.com/projects/puff.html"
+repository = "https://github.com/marcinjahn/puff"
 license = "Apache-2.0"
 keywords = ["configuration", "secret", "management", "environment", "cli"]
 categories = ["command-line-utilities", "config", "development-tools", "filesystem"]

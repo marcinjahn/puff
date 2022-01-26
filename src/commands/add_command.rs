@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Handler for the `conman add <file>` command
+/// Handler for the `puff add <file>` command
 pub struct AddCommand<'a> {
     locations_provider: &'a LocationsProvider,
 }
@@ -15,7 +15,7 @@ impl<'a> AddCommand<'a> {
         AddCommand { locations_provider }
     }
 
-    /// Adds new file to conman. A project needs to exist prior to invoking
+    /// Adds new file to puff. A project needs to exist prior to invoking
     /// that command. Optionally the file may be added to .gitignore.
     pub fn add_file(
         &self,
@@ -45,9 +45,9 @@ impl<'a> AddCommand<'a> {
         let managed_file = &managed_dir.join(Path::new(file_name));
 
         if !managed_dir.exists() {
-            // TODO: Some command like 'conman doctor' should be added to fix conman config issues
+            // TODO: Some command like 'puff doctor' should be added to fix puff config issues
             return Err(Box::new(AppError(
-                format!("conman is in corrupted state. A project called '{}' is defined in conman's config.json, however its project directory is missing", project_name),
+                format!("puff is in corrupted state. A project called '{}' is defined in puff's config.json, however its project directory is missing", project_name),
             )));
         }
 
@@ -88,7 +88,7 @@ impl<'a> AddCommand<'a> {
         Ok(())
     }
 
-    /// Handles a case where a file being added already exists in conman (and not in
+    /// Handles a case where a file being added already exists in puff (and not in
     /// user's directory).
     fn handle_only_managed_exists(
         managed_file: &Path,
@@ -99,15 +99,15 @@ impl<'a> AddCommand<'a> {
     }
 
     /// Handles a situation where the file being added by the user already exists
-    /// in both user's project directory and in conman's project directory. The following
+    /// in both user's project directory and in puff's project directory. The following
     /// cases are covered: the file in user directory is a directory; the file in user
-    /// directory is already a valid conman symlink; the files in conman and user's directory
+    /// directory is already a valid puff symlink; the files in puff and user's directory
     /// are totally different. In all these cases function returns 'true', which means the
     /// program should terminate.
     fn handle_two_files(user_file: &Path, managed_file: &Path) {
         if let Ok(symlink_path) = fs::read_link(&user_file) {
             if symlink_path == managed_file {
-                println!("The file {:?} has already been configured with conman and there's nothing more to do.", user_file);
+                println!("The file {:?} has already been configured with puff and there's nothing more to do.", user_file);
             }
         }
 
@@ -120,7 +120,7 @@ impl<'a> AddCommand<'a> {
                 );
             } else {
                 println!(
-                    "Both the project directory and conman have the file with the same name. Conman can't resolve that conflict. One way around it is to rename the file {:?} and run the command again. Conman will then set up {:?} to point to the file stored within conman registry. You will be able to modify it.",
+                    "Both the project directory and puff have the file with the same name. puff can't resolve that conflict. One way around it is to rename the file {:?} and run the command again. puff will then set up {:?} to point to the file stored within puff registry. You will be able to modify it.",
                     user_file, user_file
                 );
             }
@@ -130,7 +130,7 @@ impl<'a> AddCommand<'a> {
     }
 
     /// Handles a case where both user's directory and conamn have no file.  It will
-    /// be created in conman and user's directory will have a symlink to it.
+    /// be created in puff and user's directory will have a symlink to it.
     fn handle_fresh_file(user_file: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
         let file_name = user_file.file_name().unwrap();
         let managed_file = managed_dir.join(file_name);
@@ -142,7 +142,7 @@ impl<'a> AddCommand<'a> {
     }
 
     /// Handles a case where a file being added already exists in user's directory.
-    /// It will be moved to conman, and a softlink to it will be created in
+    /// It will be moved to puff, and a softlink to it will be created in
     /// user's directory
     fn handle_only_user_file_exists(
         user_path: &Path,
@@ -170,8 +170,8 @@ mod tests {
 
     #[test]
     fn add_file_when_project_does_not_exist() {
-        let conman_dir = tempfile::tempdir().unwrap();
-        let locations_provider = LocationsProvider::new(conman_dir.path().to_path_buf());
+        let puff_dir = tempfile::tempdir().unwrap();
+        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
 
         let sut = AddCommand::new(&locations_provider);
 
@@ -189,12 +189,12 @@ mod tests {
 
     #[test]
     fn add_file_fresh_scenario() {
-        let conman_dir = tempfile::tempdir().unwrap();
+        let puff_dir = tempfile::tempdir().unwrap();
         let current_dir = tempfile::tempdir().unwrap();
-        let _project_dir = fs::create_dir_all(conman_dir.path().join("configs/proj1")).unwrap();
-        let locations_provider = LocationsProvider::new(conman_dir.path().to_path_buf());
+        let _project_dir = fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
+        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
         let user_file = current_dir.path().join("file");
-        let config_file = conman_dir.path().join("config.json");
+        let config_file = puff_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(
             file,

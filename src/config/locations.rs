@@ -7,7 +7,7 @@ use std::{
 
 use super::app_config::AppConfigManager;
 
-const APP_NAME: &str = "conman";
+const APP_NAME: &str = "puff";
 
 pub struct LocationsProvider {
     config_base_path: PathBuf
@@ -40,7 +40,7 @@ impl LocationsProvider {
         match config.projects.iter().find(|p| p.path == user_dir) {
             None => {
                 Err(Box::new(AppError(
-                    "Parent directory of the provided file is not associated with any project known to conman. Did you initialize it with 'conman init'?".into(),
+                    "Parent directory of the provided file is not associated with any project known to puff. Did you initialize it with 'puff init'?".into(),
                 )))
             },
             Some(project) => {
@@ -52,7 +52,7 @@ impl LocationsProvider {
 
 impl Default for LocationsProvider {
     fn default() -> Self {
-        Self { config_base_path: get_base_config_path().expect("The default configuration path of conman could not be retrieved") }
+        Self { config_base_path: get_base_config_path().expect("The default configuration path of puff could not be retrieved") }
     }
 }
 

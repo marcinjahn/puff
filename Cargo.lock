@@ -50,19 +50,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "conman"
-version = "0.1.0"
-dependencies = [
- "directories",
- "serde",
- "serde_json",
- "structopt",
- "symlink",
- "tempfile",
- "uuid",
-]
-
-[[package]]
 name = "directories"
 version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -178,6 +165,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7342d5883fbccae1cc37a2353b09c87c9b0f3afd73f5fb9bba687a1f733b029"
 dependencies = [
  "unicode-xid",
+]
+
+[[package]]
+name = "puff"
+version = "0.1.0"
+dependencies = [
+ "directories",
+ "serde",
+ "serde_json",
+ "structopt",
+ "symlink",
+ "tempfile",
+ "uuid",
 ]
 
 [[package]]

@@ -25,7 +25,7 @@ impl<'a> ProjectRmCommand<'a> {
         let project_details = self.projects_retriever.get_details(&name)?;
 
         if project_details.is_none() {
-            println!("Project called '{name}' is not managed by conman, it couldn't be removed");
+            println!("Project called '{name}' is not managed by puff, it couldn't be removed");
             return Ok(());
         }
 

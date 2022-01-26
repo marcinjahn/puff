@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'conman'",
+            "name": "Debug executable 'puff'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=conman",
-                    "--package=conman"
+                    "--bin=puff",
+                    "--package=puff"
                 ],
                 "filter": {
-                    "name": "conman",
+                    "name": "puff",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'conman'",
+            "name": "Debug unit tests in executable 'puff'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=conman",
-                    "--package=conman"
+                    "--bin=puff",
+                    "--package=puff"
                 ],
                 "filter": {
-                    "name": "conman",
+                    "name": "puff",
                     "kind": "bin"
                 }
             },
