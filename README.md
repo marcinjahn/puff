@@ -5,7 +5,7 @@ various directories (typically, they live in various code projects' folders)
 making it difficult to move these files to another dev machine. Such
 configuration files are often excluded from version control systems due to
 secrets that they may contain. Puff manages those files and stores them in one
-common location. Your apps ccess the configuration files via symlinks that puff
+common location. Your apps access the configuration files via symlinks that puff
 creates.
 
 For the .NET developers, these could be `appsettings.json` files. For the NodeJS
