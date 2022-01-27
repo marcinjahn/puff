@@ -142,6 +142,9 @@ cargo install puff
 
 Cargo will build the puff binary and place it in the `$HOME/.cargo` directory.
 
+> This is currently the best option if your computer's architecture is different
+> than x86 (e.g. M1 macs)
+
 ## Limitations
 
 ### Project subdirectories are not supported
