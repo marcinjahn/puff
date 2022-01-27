@@ -115,6 +115,33 @@ config files of that project.
 Note that you can use `puff --help` to learn how to use puff. Each
 subcommand has its own `--help` (e.g. `puff add --help`).
 
+## Installation
+
+### GitHub Releases
+
+You can get the binary at the
+[Releases](https://github.com/marcinjahn/puff/releases) page. Extract the zip to
+any directory in your `$PATH` (it could be `/usr/local/bin` on linux).
+
+If you try to run the binary on a mac from your terminal, you will most likely
+get a warning "puff cannot be opened because the developer cannot be verified."
+To get around that, open Finder in the location where you extracted puff,
+right-click it, and click *Open*. Then, click *Open* again in the pop-up that
+appears. From now on, you'll be able to run puff from the terminal.
+
+> Note that GitHub Release binaries are published only for x86 architecture at
+> the moment, which is non-ideal for machines like M1-based macs.
+
+### Cargo
+
+If you have Rust's cargo installed, you can install this package with:
+
+```sh
+cargo install puff
+```
+
+Cargo will build the puff binary and place it in the `$HOME/.cargo` directory.
+
 ## Limitations
 
 ### Project subdirectories are not supported
