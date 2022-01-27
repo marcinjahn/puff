@@ -1,7 +1,7 @@
 [package]
 name = "puff"
 description = "puff is a CLI tool that manages private configuration/secret files of your dev projects"
-version = "0.1.5-alpha.2"
+version = "0.1.5"
 edition = "2021"
 authors = ["Marcin Jahn <marcinj10@gmail.com>"]
 readme = "README.md"
