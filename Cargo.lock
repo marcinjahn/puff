@@ -169,7 +169,7 @@ dependencies = [
 
 [[package]]
 name = "puff"
-version = "0.1.4"
+version = "0.1.5-alpha.1"
 dependencies = [
  "directories",
  "serde",
