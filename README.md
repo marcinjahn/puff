@@ -137,9 +137,21 @@ cd marcinjahn/puff
 cargo install --path .
 ```
 
-For now, this is the only way to install puff. Soon it will also be available
-on crate.io and potentially some other package management systems (such as
-brew).
+### Releases
+
+I use [cargo-release](https://github.com/crate-ci/cargo-release) to release new
+versions of puff to crate.io.
+
+```sh
+# PATCH
+cargo release patch --execute --no-confirm
+
+#MINOR
+cargo release minor --execute --no-confirm
+
+#MAJOR
+cargo release major --execute --no-confirm
+```
 
 ## Homepage
 
