@@ -123,10 +123,10 @@ You can get the binary at the
 [Releases](https://github.com/marcinjahn/puff/releases) page. Extract the zip to
 any directory in your `$PATH` (it could be `/usr/local/bin` on linux).
 
-If you try to run the binary on a mac from your terminal, you will most likely
+If you try to run the binary on a Mac from your terminal, you will most likely
 get a warning "puff cannot be opened because the developer cannot be verified."
 To get around that, open Finder in the location where you extracted puff,
-right-click it, and click *Open*. Then, click *Open* again in the pop-up that
+right-click it and click *Open*. Then, click *Open* again in the pop-up that
 appears. From now on, you'll be able to run puff from the terminal.
 
 > Note that GitHub Release binaries are published only for x86 architecture at
@@ -143,7 +143,7 @@ cargo install puff
 Cargo will build the puff binary and place it in the `$HOME/.cargo` directory.
 
 > This is currently the best option if your computer's architecture is different
-> than x86 (e.g. M1 macs)
+> than x86 (e.g., M1 macs)
 
 ## Limitations
 
@@ -153,7 +153,7 @@ Puff can manage only one-level depth of files in a project. For example, if
 you initialize the following path as a puff project - `/home/user/code/app1` - you can
 `puff add` only files that are directly in that directory. 
 
-If you see a use case for lifting up that limitation, feel free to create a Pull
+If you see a use case for lifting that limitation, feel free to create a Pull
 Request or create an issue for it.
 
 
@@ -170,7 +170,7 @@ cargo install --path .
 ### Releases
 
 I use [cargo-release](https://github.com/crate-ci/cargo-release) to release new
-versions of puff to crate.io.
+versions of puff to [crates.io](https://crates.io/crates/puff).
 
 ```sh
 # PATCH
