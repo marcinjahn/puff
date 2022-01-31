@@ -51,17 +51,17 @@ impl<'a> AddCommand<'a> {
             )));
         }
 
+        let mut message = String::from("");
         if user_file.exists() && managed_file.exists() {
             AddCommand::handle_two_files(&user_file, managed_file);
-            return Ok(());
         }
-
-        if !user_file.exists() && managed_file.exists() {
+        else if !user_file.exists() && managed_file.exists() {
             AddCommand::handle_only_managed_exists(managed_file, &user_file)?;
+            message = format!("It was symlinked to an existing file managed by puff.");
         }
-
-        if user_file.exists() {
+        else if user_file.exists() {
             AddCommand::handle_only_user_file_exists(&user_file, &managed_dir)?;
+            message = format!("File's content has been persisted.");
         } else {
             AddCommand::handle_fresh_file(&user_file, &managed_dir)?;
         }
@@ -76,8 +76,7 @@ impl<'a> AddCommand<'a> {
         }
 
         println!(
-            "The file {:?} has been added to the project named '{}'",
-            file_name, project_name
+            "The file {file_name:?} has been added to the project named '{project_name}'. {message}"
         );
         if let Some(git_ignore_result) = git_ignore_result {
             println!(
