@@ -1,5 +1,7 @@
 # puff
 
+[![CI](https://github.com/marcinjahn/puff/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/marcinjahn/puff/actions/workflows/ci.yml)
+
 Puff is a CLI tool that solves the issue of storing app configuration files in
 various directories (typically, they live in various code projects' folders)
 making it difficult to move these files to another dev machine. Such
