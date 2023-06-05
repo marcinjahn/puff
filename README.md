@@ -51,6 +51,9 @@ location that you can transfer to the new machine.
 
 ## Usage
 
+
+![Puff Help](./img/puff-help.png)
+
 The following is the typical usage of Puff:
 
 1. You have some code project, let's say under `/home/user/code/app1`.
