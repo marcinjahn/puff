@@ -192,6 +192,4 @@ cargo release minor --execute --no-confirm
 cargo release major --execute --no-confirm
 ```
 
-## Homepage
-
-[marcinjahn.com/projects/puff.html](https://marcinjahn.com/projects/puff.html)
+[marcinjahn.com](https://marcinjahn.com)
