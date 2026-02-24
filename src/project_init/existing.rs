@@ -1,7 +1,7 @@
 use crate::{
     config::{app_config::AppConfigManager},
     error::AppError,
-    fs_utils::{backup_file},
+    fs_utils::{backup_file, symlink_file},
 };
 use std::{error::Error, fs, path::Path};
 
@@ -74,7 +74,7 @@ impl<'a> ExistingProjectInitializer<'a> {
                 file_in_user_dir.file_name().unwrap());
         }
 
-        symlink::symlink_file(managed_file, file_in_user_dir)?;
+        symlink_file(managed_file, file_in_user_dir)?;
 
         Ok(())
     }

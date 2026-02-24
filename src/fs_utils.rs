@@ -33,6 +33,14 @@ pub fn is_symlink(user_file: &Path) -> Result<bool, Box<dyn Error>> {
     Ok(metadata.is_symlink())
 }
 
+pub fn symlink_file(original: impl AsRef<Path>, link: impl AsRef<Path>) -> Result<(), Box<dyn Error>> {
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(original, link)?;
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_file(original, link)?;
+    Ok(())
+}
+
 
 #[cfg(test)]
 mod tests {

@@ -1,6 +1,7 @@
 use crate::{
     config::locations::LocationsProvider,
     error::AppError,
+    fs_utils::symlink_file,
     git_ignore::{GitIgnoreHandler, GitIgnoreResult},
 };
 use std::{
@@ -94,7 +95,7 @@ impl<'a> AddCommand<'a> {
         managed_file: &Path,
         user_file: &Path,
     ) -> Result<(), Box<dyn Error>> {
-        symlink::symlink_file(managed_file, user_file)?;
+        symlink_file(managed_file, user_file)?;
         Ok(())
     }
 
@@ -139,7 +140,7 @@ impl<'a> AddCommand<'a> {
         let managed_file = managed_dir.join(file_name);
 
         File::create(&managed_file)?;
-        symlink::symlink_file(managed_file, user_file)?;
+        symlink_file(managed_file, user_file)?;
 
         Ok(())
     }
@@ -157,7 +158,7 @@ impl<'a> AddCommand<'a> {
         fs::copy(user_path, &new_path)?;
         fs::remove_file(user_path)?;
 
-        symlink::symlink_file(new_path, user_path)?;
+        symlink_file(new_path, user_path)?;
 
         Ok(())
     }
