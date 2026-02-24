@@ -84,15 +84,16 @@ impl<'a> ProjectForgetCommand<'a> {
     }
 
     fn replace_symlinks(&self, project_details: &ProjectDetails) -> Result<()> {
-        if !project_details.user_dir.is_some() {
+        if project_details.user_dir.is_none() {
             return Ok(());
         }
         let user_path = project_details.user_dir.as_ref().unwrap();
 
         for file in &project_details.files {
             let mut target_path = user_path.join(file);
-            if !is_symlink(user_path)? {
-                target_path = get_backup_path(user_path)?;
+            fs::create_dir_all(target_path.parent().unwrap())?;
+            if !is_symlink(&target_path)? {
+                target_path = get_backup_path(&target_path)?;
             } else {
                 fs::remove_file(&target_path)?;
             }

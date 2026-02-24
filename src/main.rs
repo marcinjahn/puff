@@ -69,8 +69,7 @@ fn run() -> Result<()> {
         }
         Command::Forget { file, delete_file } => {
             let cwd = env::current_dir()?;
-            let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
-            let command = ForgetCommand::new(&locations_provider, &projects_retriever);
+            let command = ForgetCommand::new(&locations_provider);
             command.forget_file(file, &cwd, delete_file)?;
         }
         Command::Project { subcommand } => match subcommand {

@@ -4,7 +4,6 @@ use super::{
 };
 use anyhow::{bail, Result};
 use std::{
-    ffi::OsString,
     fs,
     path::{Path, PathBuf},
 };
@@ -23,11 +22,7 @@ impl<'a> ProjectsRetriever<'a> {
     }
 
     pub fn is_associated(&self, path: &Path) -> Result<bool> {
-        if self.app_config.projects.iter().any(|p| p.path == path) {
-            return Ok(true);
-        }
-
-        Ok(false)
+        Ok(self.app_config.projects.iter().any(|p| p.path == path))
     }
 
     pub fn get_details(
@@ -45,11 +40,7 @@ impl<'a> ProjectsRetriever<'a> {
             bail!("Project '{project_name}' does not exist.");
         }
 
-        let mut files = vec![];
-        for file in fs::read_dir(&managed_dir)? {
-            let file = file?;
-            files.push(file.file_name());
-        }
+        let files = collect_files_recursively(&managed_dir, &managed_dir)?;
 
         Ok(Some(ProjectDetails {
             name: project_name.to_owned(),
@@ -110,7 +101,21 @@ pub struct ProjectDetails {
     pub name: String,
     pub managed_dir: PathBuf,
     pub user_dir: Option<PathBuf>,
-    pub files: Vec<OsString>,
+    pub files: Vec<PathBuf>,
+}
+
+fn collect_files_recursively(base: &Path, dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = vec![];
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            files.extend(collect_files_recursively(base, &path)?);
+        } else {
+            files.push(path.strip_prefix(base)?.to_owned());
+        }
+    }
+    Ok(files)
 }
 
 #[cfg(test)]

@@ -31,15 +31,21 @@ impl LocationsProvider {
         self.get_configs_config_path().join(Path::new(name))
     }
 
-    pub fn get_project_name_by_user_dir(&self, user_dir: &Path) -> Result<String> {
+    /// Walks up from `path` through its ancestors and returns the first
+    /// (deepest/most-specific) registered project root found, along with the
+    /// project name. Mirrors how git handles nested repos.
+    pub fn find_project_for_path(&self, path: &Path) -> Result<(String, PathBuf)> {
         let config = AppConfigManager::new(self.get_config_file_path())?.get_config()?;
 
-        match config.projects.iter().find(|p| p.path == user_dir) {
-            None => Err(anyhow!(
-                "The current directory is not associated with any puff project. Run 'puff init' to initialize it."
-            )),
-            Some(project) => Ok(project.name.clone()),
+        for ancestor in path.ancestors() {
+            if let Some(project) = config.projects.iter().find(|p| p.path == ancestor) {
+                return Ok((project.name.clone(), project.path.clone()));
+            }
         }
+
+        Err(anyhow!(
+            "The current directory is not associated with any puff project. Run 'puff init' to initialize it."
+        ))
     }
 }
 

@@ -32,28 +32,39 @@ impl<'a> ExistingProjectInitializer<'a> {
 
     /// Initializes the user's project directory with files managed by puff
     fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<()> {
-        for file in managed_dir.read_dir()? {
-            match file {
-                Ok(file) => {
-                    self.handle_existing_file(&file.path(), user_dir)?;
+        self.process_managed_dir(user_dir, managed_dir, managed_dir)
+    }
+
+    fn process_managed_dir(&self, user_dir: &Path, managed_dir: &Path, current_dir: &Path) -> Result<()> {
+        for entry in current_dir.read_dir()? {
+            match entry {
+                Ok(entry) => {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        self.process_managed_dir(user_dir, managed_dir, &path)?;
+                    } else {
+                        let relative_path = path.strip_prefix(managed_dir)?;
+                        self.handle_existing_file(&path, user_dir, relative_path)?;
+                    }
                 }
                 Err(_err) => {
                     bail!("The project already contains some files, but some of them could not be read");
                 }
             }
         }
-
         Ok(())
     }
 
     /// Sets up a single file managed by puff to be accessible in user's project
     /// directory
-    fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path) -> Result<()> {
+    fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path, relative_path: &Path) -> Result<()> {
         let managed_file_name = managed_file
             .file_name()
             .ok_or_else(|| anyhow!("Existing file {:?} could not be read", managed_file))?;
 
-        let file_in_user_dir = user_dir.join(managed_file_name);
+        let file_in_user_dir = user_dir.join(relative_path);
+        fs::create_dir_all(file_in_user_dir.parent().unwrap())?;
+
         if file_in_user_dir.exists() {
             let backup = backup_file(&file_in_user_dir)?;
             fs::remove_file(&file_in_user_dir)?;
@@ -62,13 +73,13 @@ impl<'a> ExistingProjectInitializer<'a> {
                 A backup of the original file was created at {}. \
                 {:?} now points to the puff-managed version. \
                 Review the backup before committing.",
-                managed_file.file_name().unwrap(),
+                managed_file_name,
                 backup.unwrap(),
                 file_in_user_dir.file_name().unwrap()
             );
         }
 
-        symlink_file(managed_file, file_in_user_dir)?;
+        symlink_file(managed_file, &file_in_user_dir)?;
 
         Ok(())
     }

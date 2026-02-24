@@ -1,9 +1,9 @@
-use anyhow::{anyhow, bail, Result};
 use crate::{
     config::locations::LocationsProvider,
     fs_utils::symlink_file,
     git_ignore::{GitIgnoreHandler, GitIgnoreResult},
 };
+use anyhow::{Result, anyhow, bail};
 use std::{
     fs::{self, File},
     path::{Path, PathBuf},
@@ -41,11 +41,11 @@ impl<'a> AddCommand<'a> {
         let user_dir = user_file
             .parent()
             .ok_or_else(|| anyhow!("Could not retrieve user's project directory"))?;
-        let project_name = self
-            .locations_provider
-            .get_project_name_by_user_dir(user_dir)?;
+        let (project_name, project_root) =
+            self.locations_provider.find_project_for_path(user_dir)?;
         let managed_dir = self.locations_provider.get_managed_dir(&project_name);
-        let managed_file = &managed_dir.join(Path::new(file_name));
+        let relative_path = user_file.strip_prefix(&project_root)?;
+        let managed_file = managed_dir.join(relative_path);
 
         if !managed_dir.exists() {
             // TODO: Some command like 'puff doctor' should be added to fix puff config issues
@@ -55,34 +55,34 @@ impl<'a> AddCommand<'a> {
             );
         }
 
+        fs::create_dir_all(managed_file.parent().unwrap())?;
+
         let mut message = String::from("");
         if user_file.exists() && managed_file.exists() {
-            AddCommand::handle_two_files(&user_file, managed_file);
+            AddCommand::handle_two_files(&user_file, &managed_file);
         } else if !user_file.exists() && managed_file.exists() {
-            AddCommand::handle_only_managed_exists(managed_file, &user_file)?;
+            AddCommand::handle_only_managed_exists(&managed_file, &user_file)?;
             message = "It was symlinked to an existing file managed by puff.".to_string();
         } else if user_file.exists() {
-            AddCommand::handle_only_user_file_exists(&user_file, &managed_dir)?;
-            message = "File's content has been persisted.".to_string();
+            AddCommand::handle_only_user_file_exists(&user_file, &managed_file)?;
         } else {
-            AddCommand::handle_fresh_file(&user_file, &managed_dir)?;
+            AddCommand::handle_fresh_file(&user_file, &managed_file)?;
         }
 
-        let mut git_ignore_result: Option<GitIgnoreResult> = None;
         if add_to_git_ignore {
             let handler = GitIgnoreHandler::new();
-            git_ignore_result = Some(handler.add_to_git_ignore(
+            handler.add_to_git_ignore(
                 user_dir,
                 file_name
                     .to_str()
                     .ok_or_else(|| anyhow!("File name could not be parsed"))?,
-            )?);
+            )?;
         }
 
-        println!("Added {file_name:?} to project '{project_name}'. {message}");
-        if let Some(git_ignore_result) = git_ignore_result {
-            println!(".gitignore file has been {git_ignore_result}");
-        }
+        println!(
+            "Added {:?} to project '{project_name}'. {message}",
+            relative_path
+        );
 
         Ok(())
     }
@@ -125,11 +125,8 @@ impl<'a> AddCommand<'a> {
 
     /// Handles a case where both user's directory and puff have no file. It will
     /// be created in puff and user's directory will have a symlink to it.
-    fn handle_fresh_file(user_file: &Path, managed_dir: &Path) -> Result<()> {
-        let file_name = user_file.file_name().unwrap();
-        let managed_file = managed_dir.join(file_name);
-
-        File::create(&managed_file)?;
+    fn handle_fresh_file(user_file: &Path, managed_file: &Path) -> Result<()> {
+        File::create(managed_file)?;
         symlink_file(managed_file, user_file)?;
 
         Ok(())
@@ -138,17 +135,11 @@ impl<'a> AddCommand<'a> {
     /// Handles a case where a file being added already exists in user's directory.
     /// It will be moved to puff, and a softlink to it will be created in
     /// user's directory
-    fn handle_only_user_file_exists(
-        user_path: &Path,
-        project_configs_path: &Path,
-    ) -> Result<()> {
-        let file_name = user_path.file_name().unwrap();
-        let new_path = project_configs_path.join(file_name);
-
-        fs::copy(user_path, &new_path)?;
+    fn handle_only_user_file_exists(user_path: &Path, managed_file: &Path) -> Result<()> {
+        fs::copy(user_path, managed_file)?;
         fs::remove_file(user_path)?;
 
-        symlink_file(new_path, user_path)?;
+        symlink_file(managed_file, user_path)?;
 
         Ok(())
     }
@@ -205,5 +196,64 @@ mod tests {
         let sut = AddCommand::new(&locations_provider);
 
         sut.add_file(user_file, current_dir.path(), false).unwrap();
+    }
+
+    #[test]
+    fn add_file_in_subdirectory() {
+        let puff_dir = tempfile::tempdir().unwrap();
+        let project_root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
+        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+
+        let config_file = puff_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(
+            file,
+            "{{\"projects\":[{{\"name\":\"proj1\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
+            project_root.path().to_str().unwrap()
+        )
+        .unwrap();
+
+        let subdir = project_root.path().join("config");
+        fs::create_dir_all(&subdir).unwrap();
+        let user_file = subdir.join("secrets.env");
+
+        let sut = AddCommand::new(&locations_provider);
+        sut.add_file(user_file, project_root.path(), false).unwrap();
+
+        let managed_file = puff_dir.path().join("configs/proj1/config/secrets.env");
+        assert!(managed_file.exists());
+    }
+
+    #[test]
+    fn add_file_from_subdirectory_cwd() {
+        let puff_dir = tempfile::tempdir().unwrap();
+        let project_root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
+        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+
+        let config_file = puff_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(
+            file,
+            "{{\"projects\":[{{\"name\":\"proj1\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
+            project_root.path().to_str().unwrap()
+        )
+        .unwrap();
+
+        let subdir = project_root.path().join("config");
+        fs::create_dir_all(&subdir).unwrap();
+        let user_file = subdir.join("secrets.env");
+
+        let sut = AddCommand::new(&locations_provider);
+        // CWD is the subdir, file path is relative
+        sut.add_file(std::path::PathBuf::from("secrets.env"), &subdir, false)
+            .unwrap();
+
+        let managed_file = puff_dir.path().join("configs/proj1/config/secrets.env");
+        assert!(managed_file.exists());
+
+        let symlink_target = fs::read_link(&user_file).unwrap();
+        assert_eq!(managed_file, symlink_target);
     }
 }
