@@ -1,4 +1,8 @@
-use crate::{config::locations::LocationsProvider, error::AppError, git_ignore::{GitIgnoreHandler, GitIgnoreResult}};
+use crate::{
+    config::locations::LocationsProvider,
+    error::AppError,
+    git_ignore::{GitIgnoreHandler, GitIgnoreResult},
+};
 use std::{
     error::Error,
     fs::{self, File},
@@ -46,22 +50,21 @@ impl<'a> AddCommand<'a> {
 
         if !managed_dir.exists() {
             // TODO: Some command like 'puff doctor' should be added to fix puff config issues
-            return Err(Box::new(AppError(
-                format!("puff is in corrupted state. A project called '{}' is defined in puff's config.json, however its project directory is missing", project_name),
-            )));
+            return Err(Box::new(AppError(format!(
+                "puff is in corrupted state. A project called '{}' is defined in puff's config.json, however its project directory is missing",
+                project_name
+            ))));
         }
 
         let mut message = String::from("");
         if user_file.exists() && managed_file.exists() {
             AddCommand::handle_two_files(&user_file, managed_file);
-        }
-        else if !user_file.exists() && managed_file.exists() {
+        } else if !user_file.exists() && managed_file.exists() {
             AddCommand::handle_only_managed_exists(managed_file, &user_file)?;
-            message = format!("It was symlinked to an existing file managed by puff.");
-        }
-        else if user_file.exists() {
+            message = "It was symlinked to an existing file managed by puff.".to_string();
+        } else if user_file.exists() {
             AddCommand::handle_only_user_file_exists(&user_file, &managed_dir)?;
-            message = format!("File's content has been persisted.");
+            message = "File's content has been persisted.".to_string();
         } else {
             AddCommand::handle_fresh_file(&user_file, &managed_dir)?;
         }
@@ -71,17 +74,15 @@ impl<'a> AddCommand<'a> {
             let handler = GitIgnoreHandler::new();
             git_ignore_result = Some(handler.add_to_git_ignore(
                 user_dir,
-                file_name.to_str().ok_or("File name could not be parsed")?)?,
-            );
+                file_name.to_str().ok_or("File name could not be parsed")?,
+            )?);
         }
 
         println!(
             "The file {file_name:?} has been added to the project named '{project_name}'. {message}"
         );
         if let Some(git_ignore_result) = git_ignore_result {
-            println!(
-                ".gitignore file has been {git_ignore_result}"
-            );
+            println!(".gitignore file has been {git_ignore_result}");
         }
 
         Ok(())
@@ -104,10 +105,13 @@ impl<'a> AddCommand<'a> {
     /// are totally different. In all these cases function returns 'true', which means the
     /// program should terminate.
     fn handle_two_files(user_file: &Path, managed_file: &Path) {
-        if let Ok(symlink_path) = fs::read_link(&user_file) {
-            if symlink_path == managed_file {
-                println!("The file {:?} has already been configured with puff and there's nothing more to do.", user_file);
-            }
+        if let Ok(symlink_path) = fs::read_link(user_file)
+            && symlink_path == managed_file
+        {
+            println!(
+                "The file {:?} has already been configured with puff and there's nothing more to do.",
+                user_file
+            );
         }
 
         let metadata = fs::metadata(user_file);
@@ -150,7 +154,7 @@ impl<'a> AddCommand<'a> {
         let file_name = user_path.file_name().unwrap();
         let new_path = project_configs_path.join(file_name);
 
-        fs::copy(&user_path, &new_path)?;
+        fs::copy(user_path, &new_path)?;
         fs::remove_file(user_path)?;
 
         symlink::symlink_file(new_path, user_path)?;
@@ -170,28 +174,32 @@ mod tests {
     #[test]
     fn add_file_when_project_does_not_exist() {
         let puff_dir = tempfile::tempdir().unwrap();
+        let current_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
         let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+
+        let user_file = current_dir.path().join("file");
+        let config_file = puff_dir.path().join("config.json");
+        let mut file = File::create(&config_file).unwrap();
+        write!(file, "{{\"projects\":[]}}").unwrap();
 
         let sut = AddCommand::new(&locations_provider);
 
-        let current_dir = tempfile::tempdir().unwrap();
-        let user_file = current_dir.path().join("file");
-        let mut file = File::create(&user_file).unwrap();
-        write!(file, "some content").unwrap();
         let result = sut.add_file(user_file, current_dir.path(), false);
 
         assert!(result.is_err());
         // TODO: Use proper error kinds and check that
         let message = (*result.err().unwrap()).to_string();
-        assert!(message.contains("initialization failed"));
+        assert!(message.contains("Did you initialize"));
     }
 
     #[test]
     fn add_file_fresh_scenario() {
         let puff_dir = tempfile::tempdir().unwrap();
         let current_dir = tempfile::tempdir().unwrap();
-        let _project_dir = fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
+        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
         let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+
         let user_file = current_dir.path().join("file");
         let config_file = puff_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
