@@ -1,21 +1,21 @@
 use std::path::PathBuf;
-use structopt::StructOpt;
+use clap::{Args, Parser, Subcommand};
 
-#[derive(StructOpt)]
-pub struct AppArgs {
-    /// The path that conamn will treat as a base path for all its data storage (configs, projects)
-    #[structopt(default_value = "default", env, hidden = true)]
-    pub config_path: String,
-
-    #[structopt(subcommand)]
-    pub command: Command,
-}
-
-#[derive(StructOpt)]
-#[structopt(
+#[derive(Parser)]
+#[command(
     name = "puff",
     about = "A configuration manager that keeps private configuration files from various projects in a central directory so that they can be easily synced between different dev machines."
 )]
+pub struct AppArgs {
+    /// The path that conamn will treat as a base path for all its data storage (configs, projects)
+    #[arg(default_value = "default", env = "CONFIG_PATH", hide = true)]
+    pub config_path: String,
+
+    #[command(subcommand)]
+    pub command: Command,
+}
+
+#[derive(Subcommand)]
 pub enum Command {
     /// Initializes the project.
     Init,
@@ -27,7 +27,7 @@ pub enum Command {
         file: PathBuf, // TODO: Vec<PathBuf>
 
         /// Adds the new file to .gitignore (.gitignre will be created if it doesn't exist)
-        #[structopt(short = "g", long = "git-ignore")]
+        #[arg(short = 'g', long = "git-ignore")]
         git_ignore: bool,
     },
 
@@ -38,7 +38,7 @@ pub enum Command {
         file: PathBuf,
 
         /// Removes the file from the host
-        #[structopt(short = "d", long = "delete")]
+        #[arg(short = 'd', long = "delete")]
         delete_file: bool,
     },
 
@@ -46,37 +46,39 @@ pub enum Command {
     List(ListSubcommand),
 
     /// Subcommand for managing projects
-    Project(ProjectSubcommand),
+    Project {
+        #[command(subcommand)]
+        subcommand: ProjectSubcommand,
+    },
 }
 
-#[derive(StructOpt)]
+#[derive(Args)]
 pub struct ListSubcommand {
     /// Retrieve only the unassociated projects
-    #[structopt(short = "u")]
+    #[arg(short = 'u')]
     pub only_unassociated: bool,
 
     /// Retrieve only the associated projects
-    #[structopt(short = "a")]
+    #[arg(short = 'a')]
     pub only_associated: bool,
 }
 
-#[derive(StructOpt)]
+#[derive(Subcommand)]
 pub enum ProjectSubcommand {
     /// Removes a project. By default, all project's files managed by puff will be moved into the associated path (if the project is associated with any path)
     Forget(ProjectForgetSubcommand),
 }
 
-#[derive(StructOpt)]
+#[derive(Args)]
 pub struct ProjectForgetSubcommand {
     /// Project to remove
-    #[structopt()]
     pub project_name: String, // TODO: Vec<PathBuf>
 
     /// Deletes the managed files from the filesystem
-    #[structopt(short = "d", long = "delete-files")]
+    #[arg(short = 'd', long = "delete-files")]
     pub delete_files: bool,
 
     /// Skips the Y/N question
-    #[structopt(short = "y")]
+    #[arg(short = 'y')]
     pub skip_confirmation: bool,
 }

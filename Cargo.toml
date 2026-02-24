@@ -2,7 +2,7 @@
 name = "puff"
 description = "puff is a CLI tool that manages private configuration/secret files of your dev projects"
 version = "0.1.7"
-edition = "2021"
+edition = "2024"
 authors = ["Marcin Jahn <marcinj10@gmail.com>"]
 readme = "README.md"
 homepage = "https://marcinjahn.com/projects/puff.html"
@@ -14,10 +14,10 @@ categories = ["command-line-utilities", "config", "development-tools", "filesyst
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = "0.3"
-directories = "4.0.1"
+clap = { version = "4", features = ["derive", "env"] }
+directories = "6"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-uuid = { version = "0.8", features = ["serde", "v4"] }
+uuid = { version = "1", features = ["serde", "v4"] }
 symlink = "0.1.0"
 tempfile = "3"

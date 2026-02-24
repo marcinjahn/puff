@@ -11,7 +11,7 @@ pub struct AddCommand<'a> {
 }
 
 impl<'a> AddCommand<'a> {
-    pub fn new(locations_provider: &LocationsProvider) -> AddCommand {
+    pub fn new(locations_provider: &LocationsProvider) -> AddCommand<'_> {
         AddCommand { locations_provider }
     }
 

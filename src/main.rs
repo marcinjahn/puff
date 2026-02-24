@@ -8,7 +8,7 @@ use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
 use std::{env, error::Error, path::Path};
-use structopt::StructOpt;
+use clap::Parser;
 
 mod app_init;
 mod cli_args;
@@ -28,7 +28,7 @@ fn main() {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-    let args = AppArgs::from_args();
+    let args = AppArgs::parse();
 
     let locations_provider = match args.config_path.as_str() {
         "default" => LocationsProvider::default(),
@@ -73,7 +73,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             let command = ForgetCommand::new(&locations_provider, &projects_retriever);
             command.forget_file(file, &cwd, delete_file)?;
         }
-        Command::Project(subcommand) => match subcommand {
+        Command::Project { subcommand } => match subcommand {
             cli_args::ProjectSubcommand::Forget(details) => {
                 let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
                 let command = ProjectForgetCommand::new(&projects_retriever, &app_config_manager);
