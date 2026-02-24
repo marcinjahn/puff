@@ -37,8 +37,8 @@ specification for Linux).
 The files managed by Puff are stored in the following locations, depending on
 the operating system:
 
-- macOS: `/Users/Alice/Library/Application Support/com.marcinjahn.puff/configs`
 - Linux: `/home/alice/.config/puff/configs`
+- macOS: `/Users/Alice/Library/Application Support/com.marcinjahn.puff/configs`
 - Windows: `C:\Users\Alice\AppData\Roaming\marcinjahn\puff\configs`
 
 Puff would be storing your projects' configs in folders stored in the
@@ -50,7 +50,6 @@ files (at least the ones you manage with Puff) are stored in one central
 location that you can transfer to the new machine.
 
 ## Usage
-
 
 ![Puff Help](./img/puff-help.png)
 
@@ -68,7 +67,7 @@ puff init # you'll be asked to provide a name for a new project
 At this point, Puff knows about that project, and it is able to manage config
 files for it.
 
-3. Let's add some config file to our project
+1. Let's add some config file to our project
 
 ```sh
 puff add appsettings.json # optionally add '-g' flag to add the file to .gitignore
@@ -130,16 +129,16 @@ subcommand has its own `--help` (e.g. `puff add --help`).
 
 You can get the binary at the
 [Releases](https://github.com/marcinjahn/puff/releases) page. Extract the zip to
-any directory in your `$PATH` (it could be `/usr/local/bin` on linux).
+any directory in your `$PATH` (it could be `$HOME/bin` on linux).
 
 If you try to run the binary on a Mac from your terminal, you will most likely
 get a warning "puff cannot be opened because the developer cannot be verified."
 To get around that, open Finder in the location where you extracted Puff,
-right-click it and click *Open*. Then, click *Open* again in the pop-up that
+right-click it and click _Open_. Then, click _Open_ again in the pop-up that
 appears. From now on, you'll be able to run Puff from the terminal.
 
 > Note that GitHub Release binaries are published only for x86 architecture at
-> the moment, which is non-ideal for machines like M1-based macs.
+> the moment, which is non-ideal for machines like M-series Macs.
 
 ### Cargo
 
@@ -152,19 +151,7 @@ cargo install puff
 Cargo will build the puff binary and place it in the `$HOME/.cargo` directory.
 
 > This is currently the best option if your computer's architecture is different
-> than x86 (e.g., M1 macs)
-
-## Limitations
-
-### Project subdirectories are not supported
-
-Puff can manage only one-level depth of files in a project. For example, if
-you initialize the following path as a Puff project - `/home/user/code/app1` - you can
-`puff add` only files that are directly in that directory. 
-
-If you see a use case for lifting that limitation, feel free to create a Pull
-Request or create an issue for it.
-
+> than x86 (e.g., M-series Macs)
 
 ## Development
 
