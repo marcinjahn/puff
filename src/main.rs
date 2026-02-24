@@ -17,7 +17,14 @@ mod project_init;
 mod git_ignore;
 mod io_utils;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), Box<dyn Error>> {
     let args = AppArgs::from_args();
 
     let locations_provider = match args.config_path.as_str() {

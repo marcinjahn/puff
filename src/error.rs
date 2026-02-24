@@ -7,6 +7,6 @@ impl Error for AppError {}
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "puff initialization failed")
+        write!(f, "{}", self.0)
     }
 }
