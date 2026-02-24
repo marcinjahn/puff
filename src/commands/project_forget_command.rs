@@ -34,7 +34,7 @@ impl<'a> ProjectForgetCommand<'a> {
         let project_details = self.projects_retriever.get_details(&name)?;
 
         if project_details.is_none() {
-            println!("Project called '{name}' is not managed by puff, it couldn't be removed");
+            println!("Project '{name}' is not managed by puff.");
             return Ok(());
         }
 
@@ -43,7 +43,7 @@ impl<'a> ProjectForgetCommand<'a> {
                 "Are you sure you want to remove the project '{name}'?"
             ))?
         {
-            println!("Removal aborted");
+            println!("Aborted.");
             return Ok(());
         }
 
@@ -59,16 +59,9 @@ impl<'a> ProjectForgetCommand<'a> {
         self.update_config(&project_details)?;
 
         if delete_files || project_details.files.is_empty() {
-            println!("Project '{name}' has been removed");
+            println!("Project '{name}' removed.");
         } else {
-            // let files = project_details
-            //     .files
-            //     .iter()
-            //     .map(|f| f.to_str().unwrap().to_owned())
-            //     .collect::<Vec<String>>()
-            //     .join(", ");
-
-            println!("Project '{name}' has been removed. The files have been restored.");
+            println!("Project '{name}' removed. Managed files have been restored to the project directory.");
         }
         Ok(())
     }

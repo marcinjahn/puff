@@ -34,8 +34,7 @@ impl<'a> AddCommand<'a> {
 
         if user_file.is_dir() {
             return Err(Box::new(AppError(
-                "The provided path points at a directory. A file is expected (existing or not)"
-                    .into(),
+                "The specified path is a directory. A file path is required.".into(),
             )));
         }
 
@@ -52,7 +51,7 @@ impl<'a> AddCommand<'a> {
         if !managed_dir.exists() {
             // TODO: Some command like 'puff doctor' should be added to fix puff config issues
             return Err(Box::new(AppError(format!(
-                "puff is in corrupted state. A project called '{}' is defined in puff's config.json, however its project directory is missing",
+                "Corrupted state: project '{}' is registered in config.json but its directory is missing.",
                 project_name
             ))));
         }
@@ -79,9 +78,7 @@ impl<'a> AddCommand<'a> {
             )?);
         }
 
-        println!(
-            "The file {file_name:?} has been added to the project named '{project_name}'. {message}"
-        );
+        println!("Added {file_name:?} to project '{project_name}'. {message}");
         if let Some(git_ignore_result) = git_ignore_result {
             println!(".gitignore file has been {git_ignore_result}");
         }
@@ -109,27 +106,22 @@ impl<'a> AddCommand<'a> {
         if let Ok(symlink_path) = fs::read_link(user_file)
             && symlink_path == managed_file
         {
-            println!(
-                "The file {:?} has already been configured with puff and there's nothing more to do.",
-                user_file
-            );
+            println!("{:?} is already managed by puff. Nothing to do.", user_file);
         }
 
         let metadata = fs::metadata(user_file);
         if let Ok(metadata) = metadata {
             if metadata.file_type().is_dir() {
-                println!(
-                    "{:?} is a directory, which is invalid. Aborting.",
-                    user_file
-                );
+                println!("{:?} is a directory, not a file. Aborting.", user_file);
             } else {
                 println!(
-                    "Both the project directory and puff have the file with the same name. puff can't resolve that conflict. One way around it is to rename the file {:?} and run the command again. puff will then set up {:?} to point to the file stored within puff registry. You will be able to modify it.",
-                    user_file, user_file
+                    "Conflict: {:?} exists in both the project directory and puff's registry. \
+                    Rename the local file and re-run the command to resolve the conflict.",
+                    user_file
                 );
             }
         } else {
-            println!("The file {:?} could not be accessed. Aborting.", user_file);
+            println!("Could not access {:?}. Aborting.", user_file);
         }
     }
 

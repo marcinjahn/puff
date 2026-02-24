@@ -18,7 +18,7 @@ impl<'a> ListCommand<'a> {
     ) -> Result<(), Box<dyn Error>> {
         if only_associated && only_unassociated {
             return Err(Box::new(AppError(
-                "The --only-associated (-a) and --only-unassociated (-u) flags cannot be both set to true".to_string()
+                "Flags --only-associated (-a) and --only-unassociated (-u) are mutually exclusive.".to_string()
             )));
         }
 

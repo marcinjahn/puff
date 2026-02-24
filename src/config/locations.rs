@@ -40,7 +40,7 @@ impl LocationsProvider {
         match config.projects.iter().find(|p| p.path == user_dir) {
             None => {
                 Err(Box::new(AppError(
-                    "Parent directory of the provided file is not associated with any project known to puff. Did you initialize it with 'puff init'?".into(),
+                    "The current directory is not associated with any puff project. Run 'puff init' to initialize it.".into(),
                 )))
             },
             Some(project) => {
@@ -60,7 +60,7 @@ fn get_base_config_path() -> Result<PathBuf, Box<dyn Error>> {
     match ProjectDirs::from("com", "marcinjahn", APP_NAME) {
         Some(dirs) => Ok(dirs.config_dir().to_owned()),
         None => Err(Box::new(AppError(
-            "Could not find the path of configuration files of the host.".into(),
+            "Could not determine the configuration directory for this system.".into(),
         ))),
     }
 }

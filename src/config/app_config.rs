@@ -48,7 +48,7 @@ impl AppConfigManager {
     pub fn new(config_file_path: PathBuf) -> Result<AppConfigManager, Box<dyn Error>> {
         if !config_file_path.exists() {
             return Err(Box::new(AppError(
-                "puff's config.json file does not exist".into(),
+                "puff configuration file not found.".into(),
             )));
         }
 
@@ -74,7 +74,7 @@ impl AppConfigManager {
 
         if config.projects.iter().any(|p| p.name == project_name) {
             return Err(Box::new(AppError(format!(
-                "puff's config.json file already contains a project named '{}'",
+                "A project named '{}' already exists in puff's registry.",
                 project_name
             ))));
         }

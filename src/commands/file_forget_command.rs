@@ -46,7 +46,7 @@ impl<'a> ForgetCommand<'a> {
 
         if user_file.is_dir() && !delete_file {
             return Err(Box::new(AppError(
-                "The provided path points at a directory. A file is expected".into(),
+                "The specified path is a directory. A file path is required.".into(),
             )));
         }
 
@@ -61,14 +61,13 @@ impl<'a> ForgetCommand<'a> {
 
         if !self.is_file_added(user_dir, &project_name, file_name)? {
             return Err(Box::new(AppError(
-                "The provided file does not belong to any associated project known to puff".into(),
+                "The specified file does not belong to any puff-managed project.".into(),
             )));
         }
 
         if user_file.exists() && !is_symlink(&user_file)? {
             return Err(Box::new(AppError(
-                "The provided file is not managed by puff. puff must have been configured with some previous version of that file that has been deleted since then. Deal with that file first and then invoke the \"rm\" command again to remove the version that puff has stored."
-                    .into(),
+                "The file exists but is not a puff symlink. The managed version may reference a deleted file. Resolve the local file first, then re-run the command.".into(),
             )));
         }
 
@@ -83,7 +82,7 @@ impl<'a> ForgetCommand<'a> {
 
         self.remove_managed_file(&project_name, file_name)?;
 
-        println!("The file {file_name:?} has been removed from the project {project_name}");
+        println!("Removed {file_name:?} from project '{project_name}'.");
         Ok(())
     }
 

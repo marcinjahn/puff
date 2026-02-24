@@ -44,7 +44,7 @@ impl<'a> ProjectsRetriever<'a> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         if !managed_dir.exists() {
             return Err(Box::new(AppError(
-                format!("Project '{project_name}' doesn't exist"),
+                format!("Project '{project_name}' does not exist."),
             )));
         }
 
@@ -79,8 +79,7 @@ impl<'a> ProjectsRetriever<'a> {
         if all.len() < associated.len() {
             // TODO: What should user do in such scenario?
             return Err(Box::new(AppError(
-                "puff's config file is corrupted. It contains projects that do not exist."
-                    .to_string(),
+                "puff configuration is corrupted: the registry references projects that no longer exist on disk.".to_string(),
             )));
         }
 
@@ -104,7 +103,7 @@ impl<'a> ProjectsRetriever<'a> {
                 Ok(name) => projects.push(name),
                 Err(osstr) => {
                     return Err(Box::new(AppError(format!(
-                        "Project's name '{:?}' could not be converted into UTF-8 string.",
+                        "Project name '{:?}' is not valid UTF-8.",
                         osstr
                     ))));
                 }

@@ -17,7 +17,7 @@ impl<'a> InitCommand<'a> {
     pub fn init(&self, cwd: &Path) -> Result<(), Box<dyn Error>> {
         if self.projects_retriever.is_associated(cwd)? {
             return Err(Box::new(AppError(
-                "This project is already configured in puff".into(),
+                "This directory is already initialized with puff.".into(),
             )));
         }
 
@@ -29,7 +29,7 @@ impl<'a> InitCommand<'a> {
             self.init_fresh_project(&name, cwd)?;
         }
 
-        println!("Project has been set up with puff");
+        println!("Project initialized.");
 
         Ok(())
     }
@@ -38,7 +38,7 @@ impl<'a> InitCommand<'a> {
         let managed_dir = self.locations_provider.get_managed_dir(name);
         if managed_dir.exists() {
             return Err(Box::new(AppError(
-                "The project folder already exists in puff's configs".into(),
+                "A project with this name already exists in puff's registry.".into(),
             )));
         }
 
@@ -53,10 +53,8 @@ impl<'a> InitCommand<'a> {
         unassociated: Vec<String>,
         cwd: &Path,
     ) -> Result<(), Box<dyn Error>> {
-        println!("puff has a few projects that are still not associated with any path on your machine. Do you want");
-        println!(
-            "to associate one of them with the current path, or do you want to set up a fresh project?"
-        );
+        println!("Some projects in puff are not yet associated with a path on this machine.");
+        println!("Associate one with the current directory, or create a new project.");
         let choice = self.ask_about_unassociated(&unassociated)?;
         match choice {
             UserChoice::Fresh => {
@@ -85,9 +83,9 @@ impl<'a> InitCommand<'a> {
         }
 
         if !proposed_name.is_empty() {
-            println!("Provide a name for this new project ({}): ", proposed_name);
+            println!("Project name [{}]: ", proposed_name);
         } else {
-            println!("Provide a name for this new project: ");
+            println!("Project name: ");
         }
 
         let mut user_name = String::new();
@@ -99,7 +97,7 @@ impl<'a> InitCommand<'a> {
         } else if !proposed_name.is_empty() {
             Ok(proposed_name)
         } else {
-            println!("The provided name cannot be empty.");
+            println!("Name cannot be empty.");
             self.get_fresh_project_name(cwd)
         }
     }
@@ -108,12 +106,12 @@ impl<'a> InitCommand<'a> {
         &self,
         unassociated: &'a [String],
     ) -> Result<UserChoice<'a>, Box<dyn Error>> {
-        println!("0) Set up a fresh project");
+        println!("0) Create a new project");
         for (i, project) in unassociated.iter().enumerate() {
             println!("{}) Associate with the project '{}'", i + 1, project);
         }
 
-        println!("Which option do you select? (awaiting input...)");
+        println!("Select an option:");
         print!("> ");
 
         let mut choice = String::new();
@@ -129,7 +127,7 @@ impl<'a> InitCommand<'a> {
             }
         }
 
-        println!("Provided option {} is uncrecognized. Please choose one of the below or press CTRL+C to cancel.", choice);
+        println!("Unrecognized option '{}'. Choose from the list below, or press Ctrl+C to cancel.", choice.trim());
 
         self.ask_about_unassociated(unassociated)
     }

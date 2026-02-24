@@ -67,11 +67,15 @@ impl<'a> ExistingProjectInitializer<'a> {
         if file_in_user_dir.exists() {
             let backup = backup_file(&file_in_user_dir)?;
             fs::remove_file(&file_in_user_dir)?;
-            println!("Both the initialized directory and puff had the file {:?}. A backup of the file {:?} had been created under {}. Currently, {:?} points to the file that was present in puff. Remember to deal somehow with the backup file, probably you don't want it to end up in your remote repository (if you use it for this project).", 
-                managed_file.file_name().unwrap(), 
-                &file_in_user_dir, 
-                backup.unwrap(), 
-                file_in_user_dir.file_name().unwrap());
+            println!(
+                "Conflict: {:?} exists in both the project directory and puff's registry. \
+                A backup of the original file was created at {}. \
+                {:?} now points to the puff-managed version. \
+                Review the backup before committing.",
+                managed_file.file_name().unwrap(),
+                backup.unwrap(),
+                file_in_user_dir.file_name().unwrap()
+            );
         }
 
         symlink_file(managed_file, file_in_user_dir)?;
