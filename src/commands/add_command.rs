@@ -183,7 +183,8 @@ mod tests {
         assert!(result.is_err());
         // TODO: Use proper error kinds and check that
         let message = (*result.err().unwrap()).to_string();
-        assert!(message.contains("Did you initialize"));
+        print!("{}", message);
+        assert!(message.contains("The current directory is not associated with any"));
     }
 
     #[test]
