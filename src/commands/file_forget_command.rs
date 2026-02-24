@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use std::{
     ffi::OsStr,
     fs,
@@ -36,13 +36,6 @@ impl<'a> ForgetCommand<'a> {
             user_file = current_dir.join(user_file);
         }
 
-        // if !user_file.exists() {
-        //     return Err(Box::new(AppError(
-        //         "The provided file does not exist"
-        //             .into(),
-        //     )));
-        // }
-
         if user_file.is_dir() && !delete_file {
             bail!("The specified path is a directory. A file path is required.");
         }
@@ -63,7 +56,9 @@ impl<'a> ForgetCommand<'a> {
         }
 
         if user_file.exists() && !is_symlink(&user_file)? {
-            bail!("The file exists but is not a puff symlink. The managed version may reference a deleted file. Resolve the local file first, then re-run the command.");
+            bail!(
+                "The file exists but is not a puff symlink. The managed version may reference a deleted file. Resolve the local file first, then re-run the command."
+            );
         }
 
         // it's safe to remove the symlink at this point
@@ -102,12 +97,7 @@ impl<'a> ForgetCommand<'a> {
         Ok(true)
     }
 
-    fn copy_file(
-        &self,
-        user_dir: &Path,
-        project_name: &str,
-        file_name: &OsStr,
-    ) -> Result<()> {
+    fn copy_file(&self, user_dir: &Path, project_name: &str, file_name: &OsStr) -> Result<()> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         let managed_file = managed_dir.join(file_name);
         fs::copy(managed_file, user_dir.join(file_name))?;
@@ -115,11 +105,7 @@ impl<'a> ForgetCommand<'a> {
         Ok(())
     }
 
-    fn remove_managed_file(
-        &self,
-        project_name: &str,
-        file_name: &OsStr,
-    ) -> Result<()> {
+    fn remove_managed_file(&self, project_name: &str, file_name: &OsStr) -> Result<()> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         let managed_file = managed_dir.join(file_name);
         fs::remove_file(managed_file)?;
