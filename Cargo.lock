@@ -333,6 +333,7 @@ dependencies = [
 name = "puff"
 version = "0.1.7"
 dependencies = [
+ "anyhow",
  "clap",
  "directories",
  "serde",

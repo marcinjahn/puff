@@ -1,11 +1,11 @@
+use anyhow::{bail, Result};
 use crate::{
     config::{
         app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
     },
-    error::AppError,
     project_init::existing::ExistingProjectInitializer,
 };
-use std::{error::Error, fs, path::Path};
+use std::{fs, path::Path};
 
 pub struct InitCommand<'a> {
     pub projects_retriever: &'a ProjectsRetriever<'a>,
@@ -14,11 +14,9 @@ pub struct InitCommand<'a> {
 }
 
 impl<'a> InitCommand<'a> {
-    pub fn init(&self, cwd: &Path) -> Result<(), Box<dyn Error>> {
+    pub fn init(&self, cwd: &Path) -> Result<()> {
         if self.projects_retriever.is_associated(cwd)? {
-            return Err(Box::new(AppError(
-                "This directory is already initialized with puff.".into(),
-            )));
+            bail!("This directory is already initialized with puff.");
         }
 
         let unassociated = self.projects_retriever.get_unassociated_projects()?;
@@ -34,12 +32,10 @@ impl<'a> InitCommand<'a> {
         Ok(())
     }
 
-    fn init_fresh_project(&self, name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
+    fn init_fresh_project(&self, name: &str, user_dir: &Path) -> Result<()> {
         let managed_dir = self.locations_provider.get_managed_dir(name);
         if managed_dir.exists() {
-            return Err(Box::new(AppError(
-                "A project with this name already exists in puff's registry.".into(),
-            )));
+            bail!("A project with this name already exists in puff's registry.");
         }
 
         fs::create_dir_all(managed_dir)?;
@@ -52,7 +48,7 @@ impl<'a> InitCommand<'a> {
         &self,
         unassociated: Vec<String>,
         cwd: &Path,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         println!("Some projects in puff are not yet associated with a path on this machine.");
         println!("Associate one with the current directory, or create a new project.");
         let choice = self.ask_about_unassociated(&unassociated)?;
@@ -74,7 +70,7 @@ impl<'a> InitCommand<'a> {
         Ok(())
     }
 
-    fn get_fresh_project_name(&self, cwd: &Path) -> Result<String, Box<dyn Error>> {
+    fn get_fresh_project_name(&self, cwd: &Path) -> Result<String> {
         let mut proposed_name = String::new();
         if let Some(osstr) = cwd.file_name() {
             if let Some(osstr) = osstr.to_str() {
@@ -105,7 +101,7 @@ impl<'a> InitCommand<'a> {
     fn ask_about_unassociated(
         &self,
         unassociated: &'a [String],
-    ) -> Result<UserChoice<'a>, Box<dyn Error>> {
+    ) -> Result<UserChoice<'a>> {
         println!("0) Create a new project");
         for (i, project) in unassociated.iter().enumerate() {
             println!("{}) Associate with the project '{}'", i + 1, project);

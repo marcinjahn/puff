@@ -1,11 +1,10 @@
+use anyhow::{anyhow, bail, Result};
 use crate::{
     config::locations::LocationsProvider,
-    error::AppError,
     fs_utils::symlink_file,
     git_ignore::{GitIgnoreHandler, GitIgnoreResult},
 };
 use std::{
-    error::Error,
     fs::{self, File},
     path::{Path, PathBuf},
 };
@@ -27,21 +26,21 @@ impl<'a> AddCommand<'a> {
         mut user_file: PathBuf,
         current_dir: &Path,
         add_to_git_ignore: bool,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         if !user_file.is_absolute() {
             user_file = current_dir.join(user_file);
         }
 
         if user_file.is_dir() {
-            return Err(Box::new(AppError(
-                "The specified path is a directory. A file path is required.".into(),
-            )));
+            bail!("The specified path is a directory. A file path is required.");
         }
 
-        let file_name = user_file.file_name().ok_or("Couldn't retrieve file name")?;
+        let file_name = user_file
+            .file_name()
+            .ok_or_else(|| anyhow!("Couldn't retrieve file name"))?;
         let user_dir = user_file
             .parent()
-            .ok_or("Could not retrieve user's project directory")?;
+            .ok_or_else(|| anyhow!("Could not retrieve user's project directory"))?;
         let project_name = self
             .locations_provider
             .get_project_name_by_user_dir(user_dir)?;
@@ -50,10 +49,10 @@ impl<'a> AddCommand<'a> {
 
         if !managed_dir.exists() {
             // TODO: Some command like 'puff doctor' should be added to fix puff config issues
-            return Err(Box::new(AppError(format!(
+            bail!(
                 "Corrupted state: project '{}' is registered in config.json but its directory is missing.",
                 project_name
-            ))));
+            );
         }
 
         let mut message = String::from("");
@@ -74,7 +73,9 @@ impl<'a> AddCommand<'a> {
             let handler = GitIgnoreHandler::new();
             git_ignore_result = Some(handler.add_to_git_ignore(
                 user_dir,
-                file_name.to_str().ok_or("File name could not be parsed")?,
+                file_name
+                    .to_str()
+                    .ok_or_else(|| anyhow!("File name could not be parsed"))?,
             )?);
         }
 
@@ -88,10 +89,7 @@ impl<'a> AddCommand<'a> {
 
     /// Handles a case where a file being added already exists in puff (and not in
     /// user's directory).
-    fn handle_only_managed_exists(
-        managed_file: &Path,
-        user_file: &Path,
-    ) -> Result<(), Box<dyn Error>> {
+    fn handle_only_managed_exists(managed_file: &Path, user_file: &Path) -> Result<()> {
         symlink_file(managed_file, user_file)?;
         Ok(())
     }
@@ -125,9 +123,9 @@ impl<'a> AddCommand<'a> {
         }
     }
 
-    /// Handles a case where both user's directory and conamn have no file.  It will
+    /// Handles a case where both user's directory and puff have no file. It will
     /// be created in puff and user's directory will have a symlink to it.
-    fn handle_fresh_file(user_file: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
+    fn handle_fresh_file(user_file: &Path, managed_dir: &Path) -> Result<()> {
         let file_name = user_file.file_name().unwrap();
         let managed_file = managed_dir.join(file_name);
 
@@ -143,7 +141,7 @@ impl<'a> AddCommand<'a> {
     fn handle_only_user_file_exists(
         user_path: &Path,
         project_configs_path: &Path,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let file_name = user_path.file_name().unwrap();
         let new_path = project_configs_path.join(file_name);
 
@@ -182,7 +180,7 @@ mod tests {
 
         assert!(result.is_err());
         // TODO: Use proper error kinds and check that
-        let message = (*result.err().unwrap()).to_string();
+        let message = result.unwrap_err().to_string();
         print!("{}", message);
         assert!(message.contains("The current directory is not associated with any"));
     }

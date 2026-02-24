@@ -1,4 +1,5 @@
-use std::{error::Error, fs};
+use anyhow::Result;
+use std::fs;
 
 use crate::{
     config::{
@@ -30,7 +31,7 @@ impl<'a> ProjectForgetCommand<'a> {
         name: String,
         delete_files: bool,
         skip_confirmation: bool,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let project_details = self.projects_retriever.get_details(&name)?;
 
         if project_details.is_none() {
@@ -66,12 +67,12 @@ impl<'a> ProjectForgetCommand<'a> {
         Ok(())
     }
 
-    fn remove_managed_dir(&self, project_details: &ProjectDetails) -> Result<(), Box<dyn Error>> {
+    fn remove_managed_dir(&self, project_details: &ProjectDetails) -> Result<()> {
         fs::remove_dir_all(&project_details.managed_dir)?;
         Ok(())
     }
 
-    fn remove_symlinks(&self, project_details: &ProjectDetails) -> Result<(), Box<dyn Error>> {
+    fn remove_symlinks(&self, project_details: &ProjectDetails) -> Result<()> {
         for file_name in &project_details.files {
             let path = project_details.user_dir.as_ref().unwrap().join(file_name);
             if is_symlink(&path)? {
@@ -82,7 +83,7 @@ impl<'a> ProjectForgetCommand<'a> {
         Ok(())
     }
 
-    fn replace_symlinks(&self, project_details: &ProjectDetails) -> Result<(), Box<dyn Error>> {
+    fn replace_symlinks(&self, project_details: &ProjectDetails) -> Result<()> {
         if !project_details.user_dir.is_some() {
             return Ok(());
         }
@@ -102,7 +103,7 @@ impl<'a> ProjectForgetCommand<'a> {
         Ok(())
     }
 
-    fn update_config(&self, project_details: &ProjectDetails) -> Result<(), Box<dyn Error>> {
+    fn update_config(&self, project_details: &ProjectDetails) -> Result<()> {
         self.app_config_manager
             .remove_project(&project_details.name)?;
 

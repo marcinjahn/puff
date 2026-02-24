@@ -1,7 +1,6 @@
-use crate::error::AppError;
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 use std::{
-    error::Error,
     fs::File,
     io::{BufReader, BufWriter},
     path::{Path, PathBuf},
@@ -14,7 +13,7 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-    pub fn to_string(&self) -> Result<String, Box<dyn Error>> {
+    pub fn to_string(&self) -> Result<String> {
         Ok(serde_json::to_string(self)?)
     }
 }
@@ -45,18 +44,16 @@ pub struct AppConfigManager {
 }
 
 impl AppConfigManager {
-    pub fn new(config_file_path: PathBuf) -> Result<AppConfigManager, Box<dyn Error>> {
+    pub fn new(config_file_path: PathBuf) -> Result<AppConfigManager> {
         if !config_file_path.exists() {
-            return Err(Box::new(AppError(
-                "puff configuration file not found.".into(),
-            )));
+            bail!("puff configuration file not found.");
         }
 
         Ok(AppConfigManager { config_file_path })
     }
 
     /// Returns the current content of the config.json file
-    pub fn get_config(&self) -> Result<AppConfig, Box<dyn Error>> {
+    pub fn get_config(&self) -> Result<AppConfig> {
         let file = File::open(&self.config_file_path)?;
         let reader = BufReader::new(file);
         let config: AppConfig = serde_json::from_reader(reader)?;
@@ -69,14 +66,14 @@ impl AppConfigManager {
     ///
     /// WARNING: The is function modifies the config.json file, even though function's
     /// signature does not have any 'mut'.
-    pub fn add_project(&self, project_name: &str, user_dir: &Path) -> Result<(), Box<dyn Error>> {
+    pub fn add_project(&self, project_name: &str, user_dir: &Path) -> Result<()> {
         let mut config = self.get_config()?;
 
         if config.projects.iter().any(|p| p.name == project_name) {
-            return Err(Box::new(AppError(format!(
+            bail!(
                 "A project named '{}' already exists in puff's registry.",
                 project_name
-            ))));
+            );
         }
 
         config.projects.push(Project::new(project_name, user_dir));
@@ -86,7 +83,7 @@ impl AppConfigManager {
     }
 
     /// Saves provided config to the config.json file
-    fn save_config(&self, config: &AppConfig) -> Result<(), Box<dyn Error>> {
+    fn save_config(&self, config: &AppConfig) -> Result<()> {
         let file = File::create(&self.config_file_path)?;
         let writer = BufWriter::new(file);
         serde_json::to_writer_pretty(writer, &config)?;
@@ -94,7 +91,7 @@ impl AppConfigManager {
         Ok(())
     }
 
-    pub(crate) fn remove_project(&self, name: &str) -> Result<(), Box<dyn Error>> {
+    pub(crate) fn remove_project(&self, name: &str) -> Result<()> {
         let mut config = self.get_config()?;
 
         let index = config.projects.iter().position(|p| p.name == name);

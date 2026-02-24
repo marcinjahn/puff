@@ -1,15 +1,15 @@
+use anyhow::{anyhow, bail, Result};
 use crate::{
-    config::{app_config::AppConfigManager},
-    error::AppError,
+    config::app_config::AppConfigManager,
     fs_utils::{backup_file, symlink_file},
 };
-use std::{error::Error, fs, path::Path};
+use std::{fs, path::Path};
 
 
 /// Initializes a project that already exists in puff's configs
 /// directory.
 pub struct ExistingProjectInitializer<'a> {
-    app_config_manager: &'a AppConfigManager
+    app_config_manager: &'a AppConfigManager,
 }
 
 impl<'a> ExistingProjectInitializer<'a> {
@@ -18,11 +18,9 @@ impl<'a> ExistingProjectInitializer<'a> {
     }
 
     /// It updates puff's config file by adding that new project there.
-    pub fn init_project(&self, name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
+    pub fn init_project(&self, name: &str, user_dir: &Path, managed_dir: &Path) -> Result<()> {
         if !managed_dir.exists() {
-            return Err(Box::new(AppError(
-                "The project folder does not exist in puff's configs".into(),
-            )));
+            bail!("The project folder does not exist in puff's configs");
         }
 
         self.app_config_manager.add_project(name, user_dir)?;
@@ -33,17 +31,14 @@ impl<'a> ExistingProjectInitializer<'a> {
     }
 
     /// Initializes the user's project directory with files managed by puff
-    fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<(), Box<dyn Error>> {
+    fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<()> {
         for file in managed_dir.read_dir()? {
             match file {
                 Ok(file) => {
                     self.handle_existing_file(&file.path(), user_dir)?;
                 }
                 Err(_err) => {
-                    return Err(Box::new(AppError(
-                        "The project already contains some files, but some of them could not be read"
-                            .into(),
-                    )));
+                    bail!("The project already contains some files, but some of them could not be read");
                 }
             }
         }
@@ -53,15 +48,10 @@ impl<'a> ExistingProjectInitializer<'a> {
 
     /// Sets up a single file managed by puff to be accessible in user's project
     /// directory
-    fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path) -> Result<(), Box<dyn Error>> {
-        let managed_file_name = managed_file.file_name();
-        if managed_file_name.is_none() {
-            return Err(Box::new(AppError(format!(
-                "Existing file {:?} could not be read",
-                managed_file
-            ))));
-        }
-        let managed_file_name = managed_file_name.unwrap();
+    fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path) -> Result<()> {
+        let managed_file_name = managed_file
+            .file_name()
+            .ok_or_else(|| anyhow!("Existing file {:?} could not be read", managed_file))?;
 
         let file_in_user_dir = user_dir.join(managed_file_name);
         if file_in_user_dir.exists() {
@@ -111,7 +101,7 @@ mod tests {
         let config_file = File::open(config_file).unwrap();
         let reader = BufReader::new(config_file);
         let config_file: AppConfig = serde_json::from_reader(reader).unwrap();
-        
+
         assert_eq!(project_name, config_file.projects.first().unwrap().name);
         assert_eq!(user_dir.path(), config_file.projects.first().unwrap().path);
     }
@@ -134,7 +124,7 @@ mod tests {
         create_file(&managed_dir.path().join("file2"), "def");
 
         sut.init_project(project_name, user_dir.path(), managed_dir.path()).unwrap();
-        
+
         let mut symlinks = user_dir.path()
             .read_dir().unwrap()
             .map(|f| String::from(f.unwrap().path().to_str().unwrap()))
@@ -151,7 +141,7 @@ mod tests {
                 panic!("File is not a soft link")
             }
         }
-    
+
     }
 
     fn create_file(path: &Path, content: &str) {

@@ -1,6 +1,6 @@
-use std::error::Error;
+use anyhow::{bail, Result};
 
-use crate::{config::projects::ProjectsRetriever, error::AppError};
+use crate::config::projects::ProjectsRetriever;
 
 pub struct ListCommand<'a> {
     projects_retriever: &'a ProjectsRetriever<'a>,
@@ -15,11 +15,9 @@ impl<'a> ListCommand<'a> {
         &self,
         only_associated: bool,
         only_unassociated: bool,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         if only_associated && only_unassociated {
-            return Err(Box::new(AppError(
-                "Flags --only-associated (-a) and --only-unassociated (-u) are mutually exclusive.".to_string()
-            )));
+            bail!("Flags --only-associated (-a) and --only-unassociated (-u) are mutually exclusive.");
         }
 
         let mut print_newline = false;
@@ -56,7 +54,7 @@ impl<'a> ListCommand<'a> {
         self.projects_retriever.get_associated_projects()
     }
 
-    fn get_unassociationed_proj(&self) -> Result<Vec<String>, Box<dyn Error>> {
+    fn get_unassociationed_proj(&self) -> Result<Vec<String>> {
         self.projects_retriever.get_unassociated_projects()
     }
 }

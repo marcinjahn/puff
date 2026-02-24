@@ -2,9 +2,8 @@ use super::{
     app_config::AppConfig,
     locations::LocationsProvider,
 };
-use crate::error::AppError;
+use anyhow::{bail, Result};
 use std::{
-    error::Error,
     ffi::OsString,
     fs,
     path::{Path, PathBuf},
@@ -23,7 +22,7 @@ impl<'a> ProjectsRetriever<'a> {
         }
     }
 
-    pub fn is_associated(&self, path: &Path) -> Result<bool, Box<dyn Error>> {
+    pub fn is_associated(&self, path: &Path) -> Result<bool> {
         if self.app_config.projects.iter().any(|p| p.path == path) {
             return Ok(true);
         }
@@ -34,7 +33,7 @@ impl<'a> ProjectsRetriever<'a> {
     pub fn get_details(
         &self,
         project_name: &str,
-    ) -> Result<Option<ProjectDetails>, Box<dyn Error>> {
+    ) -> Result<Option<ProjectDetails>> {
         let project_config = self
             .app_config
             .projects
@@ -43,9 +42,7 @@ impl<'a> ProjectsRetriever<'a> {
 
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         if !managed_dir.exists() {
-            return Err(Box::new(AppError(
-                format!("Project '{project_name}' does not exist."),
-            )));
+            bail!("Project '{project_name}' does not exist.");
         }
 
         let mut files = vec![];
@@ -72,15 +69,13 @@ impl<'a> ProjectsRetriever<'a> {
 
     /// Returns projects' names that exist in puff, but have not yet been associated
     /// with any user's directory
-    pub fn get_unassociated_projects(&self) -> Result<Vec<String>, Box<dyn Error>> {
+    pub fn get_unassociated_projects(&self) -> Result<Vec<String>> {
         let all = self.get_all_projects()?;
         let associated: Vec<_> = self.app_config.projects.iter().map(|p| &p.name).collect();
 
         if all.len() < associated.len() {
             // TODO: What should user do in such scenario?
-            return Err(Box::new(AppError(
-                "puff configuration is corrupted: the registry references projects that no longer exist on disk.".to_string(),
-            )));
+            bail!("puff configuration is corrupted: the registry references projects that no longer exist on disk.");
         }
 
         Ok(all
@@ -92,7 +87,7 @@ impl<'a> ProjectsRetriever<'a> {
 
     /// Returns names of all the projects that puff stores (some of them might
     /// not be associated yet)
-    fn get_all_projects(&self) -> Result<Vec<String>, Box<dyn Error>> {
+    fn get_all_projects(&self) -> Result<Vec<String>> {
         let location = self.locations_provider.get_configs_config_path();
         let paths = fs::read_dir(location)?;
 
@@ -102,10 +97,7 @@ impl<'a> ProjectsRetriever<'a> {
             match name {
                 Ok(name) => projects.push(name),
                 Err(osstr) => {
-                    return Err(Box::new(AppError(format!(
-                        "Project name '{:?}' is not valid UTF-8.",
-                        osstr
-                    ))));
+                    bail!("Project name '{:?}' is not valid UTF-8.", osstr);
                 }
             }
         }

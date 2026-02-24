@@ -1,7 +1,8 @@
+use anyhow::Result;
 use std::fmt::Display;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::{error::Error, fs::File, path::Path};
+use std::{fs::File, path::Path};
 
 /// Adds files to existing/new .gitignore
 pub struct GitIgnoreHandler {}
@@ -18,7 +19,7 @@ impl GitIgnoreHandler {
         &self,
         user_dir: &Path,
         file_name: &str,
-    ) -> Result<GitIgnoreResult, Box<dyn Error>> {
+    ) -> Result<GitIgnoreResult> {
         if !user_dir.join(".gitignore").exists() {
             self.create_git_ignore_file(user_dir, file_name)?;
 
@@ -34,7 +35,7 @@ impl GitIgnoreHandler {
         &self,
         dir: &Path,
         file_to_ignore: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let mut file = File::create(dir.join(".gitignore"))?;
         writeln!(file, "{file_to_ignore}")?;
 
@@ -45,7 +46,7 @@ impl GitIgnoreHandler {
         &self,
         dir: &Path,
         file_to_ignore: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let mut file = OpenOptions::new()
             .write(true)
             .append(true)

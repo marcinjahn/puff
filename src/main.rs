@@ -1,5 +1,7 @@
+use anyhow::Result;
 use app_init::AppInitializer;
 use cli_args::{AppArgs, Command};
+use clap::Parser;
 use commands::{
     add_command::AddCommand, file_forget_command::ForgetCommand, init_command::InitCommand,
     list_command::ListCommand, project_forget_command::ProjectForgetCommand,
@@ -7,14 +9,12 @@ use commands::{
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
-use std::{env, error::Error, path::Path};
-use clap::Parser;
+use std::{env, path::Path};
 
 mod app_init;
 mod cli_args;
 mod commands;
 mod config;
-mod error;
 mod fs_utils;
 mod git_ignore;
 mod io_utils;
@@ -27,7 +27,7 @@ fn main() {
     }
 }
 
-fn run() -> Result<(), Box<dyn Error>> {
+fn run() -> Result<()> {
     let args = AppArgs::parse();
 
     let locations_provider = match args.config_path.as_str() {
@@ -88,5 +88,3 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
-// TODO: Improve error handling for good error UX

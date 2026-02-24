@@ -1,5 +1,5 @@
+use anyhow::{anyhow, bail, Result};
 use std::{
-    error::Error,
     ffi::OsStr,
     fs,
     path::{Path, PathBuf},
@@ -7,7 +7,6 @@ use std::{
 
 use crate::{
     config::{locations::LocationsProvider, projects::ProjectsRetriever},
-    error::AppError,
     fs_utils::is_symlink,
 };
 
@@ -32,7 +31,7 @@ impl<'a> ForgetCommand<'a> {
         mut user_file: PathBuf,
         current_dir: &Path,
         delete_file: bool,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         if !user_file.is_absolute() {
             user_file = current_dir.join(user_file);
         }
@@ -45,30 +44,26 @@ impl<'a> ForgetCommand<'a> {
         // }
 
         if user_file.is_dir() && !delete_file {
-            return Err(Box::new(AppError(
-                "The specified path is a directory. A file path is required.".into(),
-            )));
+            bail!("The specified path is a directory. A file path is required.");
         }
 
-        let file_name = user_file.file_name().ok_or("Couldn't retrieve file name")?;
+        let file_name = user_file
+            .file_name()
+            .ok_or_else(|| anyhow!("Couldn't retrieve file name"))?;
         let user_dir = user_file
             .parent()
-            .ok_or("Could not retrieve user's project directory")?;
+            .ok_or_else(|| anyhow!("Could not retrieve user's project directory"))?;
 
         let project_name = self
             .locations_provider
             .get_project_name_by_user_dir(user_dir)?;
 
         if !self.is_file_added(user_dir, &project_name, file_name)? {
-            return Err(Box::new(AppError(
-                "The specified file does not belong to any puff-managed project.".into(),
-            )));
+            bail!("The specified file does not belong to any puff-managed project.");
         }
 
         if user_file.exists() && !is_symlink(&user_file)? {
-            return Err(Box::new(AppError(
-                "The file exists but is not a puff symlink. The managed version may reference a deleted file. Resolve the local file first, then re-run the command.".into(),
-            )));
+            bail!("The file exists but is not a puff symlink. The managed version may reference a deleted file. Resolve the local file first, then re-run the command.");
         }
 
         // it's safe to remove the symlink at this point
@@ -92,7 +87,7 @@ impl<'a> ForgetCommand<'a> {
         user_dir: &Path,
         project_name: &str,
         file_name: &OsStr,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool> {
         let is_associated = self.projects_retriever.is_associated(user_dir)?;
 
         if !is_associated {
@@ -112,7 +107,7 @@ impl<'a> ForgetCommand<'a> {
         user_dir: &Path,
         project_name: &str,
         file_name: &OsStr,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         let managed_file = managed_dir.join(file_name);
         fs::copy(managed_file, user_dir.join(file_name))?;
@@ -124,7 +119,7 @@ impl<'a> ForgetCommand<'a> {
         &self,
         project_name: &str,
         file_name: &OsStr,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         let managed_file = managed_dir.join(file_name);
         fs::remove_file(managed_file)?;

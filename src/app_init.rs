@@ -1,6 +1,6 @@
+use anyhow::Result;
 use crate::config::{app_config::AppConfig, locations::LocationsProvider};
 use std::{
-    error::Error,
     fs::{self, File},
     io::Write,
     path::Path,
@@ -13,7 +13,7 @@ pub struct AppInitializer<'a> {
 
 impl<'a> AppInitializer<'a> {
     /// Creates config dir and file if they don't exist
-    pub fn init(&self) -> Result<(), Box<dyn Error>> {
+    pub fn init(&self) -> Result<()> {
         let base_config_dir = self.locations_provider.get_base_config_path()?;
         if !base_config_dir.exists() {
             let base_config_dir = self.locations_provider.get_configs_config_path();
@@ -33,23 +33,16 @@ impl<'a> AppInitializer<'a> {
         Ok(())
     }
 
-    fn create_config_file(&self, file_path: &Path) -> Result<(), Box<dyn Error>> {
+    fn create_config_file(&self, file_path: &Path) -> Result<()> {
         let file_content = AppConfig::default().to_string()?;
-
-        let mut file = match File::create(&file_path) {
-            Err(err) => {
-                return Err(Box::new(err));
-            }
-            Ok(file) => file,
-        };
-
+        let mut file = File::create(&file_path)?;
         Ok(file.write_all(file_content.as_bytes())?)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{path::PathBuf, fs};
+    use std::{fs, path::PathBuf};
 
     use crate::config::locations::LocationsProvider;
     use super::AppInitializer;
@@ -101,5 +94,4 @@ mod tests {
             .replace("\r", "")
             .replace(" ", "")
     }
-    
 }
