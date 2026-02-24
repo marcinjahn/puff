@@ -1,22 +1,31 @@
 use std::{error::Error, fs};
 
 use crate::{
-    config::{projects::{ProjectDetails, ProjectsRetriever}, app_config::AppConfigManager},
+    config::{
+        app_config::AppConfigManager,
+        projects::{ProjectDetails, ProjectsRetriever},
+    },
     fs_utils::{get_backup_path, is_symlink},
     io_utils::confirm,
 };
 
-pub struct ProjectRmCommand<'a> {
+pub struct ProjectForgetCommand<'a> {
     projects_retriever: &'a ProjectsRetriever<'a>,
-    app_config_manager: &'a AppConfigManager
+    app_config_manager: &'a AppConfigManager,
 }
 
-impl<'a> ProjectRmCommand<'a> {
-    pub fn new(projects_retriever: &'a ProjectsRetriever, app_config_manager: &'a AppConfigManager) -> ProjectRmCommand<'a> {
-        ProjectRmCommand { projects_retriever, app_config_manager}
+impl<'a> ProjectForgetCommand<'a> {
+    pub fn new(
+        projects_retriever: &'a ProjectsRetriever,
+        app_config_manager: &'a AppConfigManager,
+    ) -> ProjectForgetCommand<'a> {
+        ProjectForgetCommand {
+            projects_retriever,
+            app_config_manager,
+        }
     }
 
-    pub fn remove_project(
+    pub fn forget_project(
         &self,
         name: String,
         delete_files: bool,
@@ -48,7 +57,6 @@ impl<'a> ProjectRmCommand<'a> {
 
         self.remove_managed_dir(&project_details)?;
         self.update_config(&project_details)?;
-        
 
         if delete_files || project_details.files.is_empty() {
             println!("Project '{name}' has been removed");
@@ -88,7 +96,6 @@ impl<'a> ProjectRmCommand<'a> {
         let user_path = project_details.user_dir.as_ref().unwrap();
 
         for file in &project_details.files {
-
             let mut target_path = user_path.join(file);
             if !is_symlink(user_path)? {
                 target_path = get_backup_path(user_path)?;
@@ -103,7 +110,8 @@ impl<'a> ProjectRmCommand<'a> {
     }
 
     fn update_config(&self, project_details: &ProjectDetails) -> Result<(), Box<dyn Error>> {
-        self.app_config_manager.remove_project(&project_details.name)?;
+        self.app_config_manager
+            .remove_project(&project_details.name)?;
 
         Ok(())
     }

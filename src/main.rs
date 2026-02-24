@@ -1,6 +1,9 @@
 use app_init::AppInitializer;
 use cli_args::{AppArgs, Command};
-use commands::{add_command::AddCommand, init_command::InitCommand, list_command::ListCommand, file_rm_command::RmCommand, project_rm_command::ProjectRmCommand};
+use commands::{
+    add_command::AddCommand, file_forget_command::ForgetCommand, init_command::InitCommand,
+    list_command::ListCommand, project_forget_command::ProjectForgetCommand,
+};
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
@@ -13,9 +16,9 @@ mod commands;
 mod config;
 mod error;
 mod fs_utils;
-mod project_init;
 mod git_ignore;
 mod io_utils;
+mod project_init;
 
 fn main() {
     if let Err(e) = run() {
@@ -60,29 +63,26 @@ fn run() -> Result<(), Box<dyn Error>> {
             command.add_file(file, &cwd, git_ignore)?;
         }
         Command::List(options) => {
-            let projects_retriever =
-                ProjectsRetriever::new(app_config, &locations_provider);
+            let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
             let command = ListCommand::new(&projects_retriever);
             command.list(options.only_associated, options.only_unassociated)?;
         }
-        Command::Rm { file, delete_file } => {
+        Command::Forget { file, delete_file } => {
             let cwd = env::current_dir()?;
-            let projects_retriever =
-                ProjectsRetriever::new(app_config, &locations_provider);
-            let command = RmCommand::new(&locations_provider, &projects_retriever);
-            command.remove_file(file, &cwd, delete_file)?;
-        },
-        Command::Project(subcommand) => {
-
-            match subcommand {
-                cli_args::ProjectSubcommand::Rm(details) => {
-                    let projects_retriever =
-                    ProjectsRetriever::new(app_config, &locations_provider);
-                    let command = ProjectRmCommand::new(&projects_retriever, &app_config_manager);
-                    command.remove_project(details.project_name, details.delete_files, details.skip_confirmation)?;
-                }
+            let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
+            let command = ForgetCommand::new(&locations_provider, &projects_retriever);
+            command.forget_file(file, &cwd, delete_file)?;
+        }
+        Command::Project(subcommand) => match subcommand {
+            cli_args::ProjectSubcommand::Forget(details) => {
+                let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
+                let command = ProjectForgetCommand::new(&projects_retriever, &app_config_manager);
+                command.forget_project(
+                    details.project_name,
+                    details.delete_files,
+                    details.skip_confirmation,
+                )?;
             }
-
         },
     }
 

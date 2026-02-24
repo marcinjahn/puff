@@ -7,20 +7,27 @@ use std::{
 
 use crate::{
     config::{locations::LocationsProvider, projects::ProjectsRetriever},
-    error::AppError, fs_utils::is_symlink,
+    error::AppError,
+    fs_utils::is_symlink,
 };
 
-pub struct RmCommand<'a> {
+pub struct ForgetCommand<'a> {
     locations_provider: &'a LocationsProvider,
     projects_retriever: &'a ProjectsRetriever<'a>,
 }
 
-impl<'a> RmCommand<'a> {
-    pub fn new(locations_provider: &'a LocationsProvider, projects_retriever: &'a ProjectsRetriever) -> RmCommand<'a> {
-        RmCommand { locations_provider, projects_retriever}
+impl<'a> ForgetCommand<'a> {
+    pub fn new(
+        locations_provider: &'a LocationsProvider,
+        projects_retriever: &'a ProjectsRetriever,
+    ) -> ForgetCommand<'a> {
+        ForgetCommand {
+            locations_provider,
+            projects_retriever,
+        }
     }
 
-    pub fn remove_file(
+    pub fn forget_file(
         &self,
         mut user_file: PathBuf,
         current_dir: &Path,
@@ -54,8 +61,7 @@ impl<'a> RmCommand<'a> {
 
         if !self.is_file_added(user_dir, &project_name, file_name)? {
             return Err(Box::new(AppError(
-                "The provided file does not belong to any associated project known to puff"
-                    .into(),
+                "The provided file does not belong to any associated project known to puff".into(),
             )));
         }
 
@@ -115,7 +121,11 @@ impl<'a> RmCommand<'a> {
         Ok(())
     }
 
-    fn remove_managed_file(&self, project_name: &str, file_name: &OsStr) -> Result<(), Box<dyn Error>> {
+    fn remove_managed_file(
+        &self,
+        project_name: &str,
+        file_name: &OsStr,
+    ) -> Result<(), Box<dyn Error>> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         let managed_file = managed_dir.join(file_name);
         fs::remove_file(managed_file)?;

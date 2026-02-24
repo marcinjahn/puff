@@ -28,25 +28,25 @@ pub enum Command {
 
         /// Adds the new file to .gitignore (.gitignre will be created if it doesn't exist)
         #[structopt(short = "g", long = "git-ignore")]
-        git_ignore: bool
+        git_ignore: bool,
     },
 
     /// Removes a file from puff. The file will stay in
     /// project's directory unless the --delete flag is added
-    Rm {
+    Forget {
         /// File to be removed from puff
         file: PathBuf,
 
         /// Removes the file from the host
         #[structopt(short = "d", long = "delete")]
-        delete_file: bool
+        delete_file: bool,
     },
 
     /// Lists all projects known to puff (both associated and unassociated ones)
     List(ListSubcommand),
 
     /// Subcommand for managing projects
-    Project(ProjectSubcommand)
+    Project(ProjectSubcommand),
 }
 
 #[derive(StructOpt)]
@@ -57,19 +57,17 @@ pub struct ListSubcommand {
 
     /// Retrieve only the associated projects
     #[structopt(short = "a")]
-    pub only_associated: bool
+    pub only_associated: bool,
 }
 
 #[derive(StructOpt)]
 pub enum ProjectSubcommand {
-
     /// Removes a project. By default, all project's files managed by puff will be moved into the associated path (if the project is associated with any path)
-    Rm(ProjectRmSubcommand)
+    Forget(ProjectForgetSubcommand),
 }
 
-
 #[derive(StructOpt)]
-pub struct ProjectRmSubcommand {
+pub struct ProjectForgetSubcommand {
     /// Project to remove
     #[structopt()]
     pub project_name: String, // TODO: Vec<PathBuf>
@@ -80,5 +78,5 @@ pub struct ProjectRmSubcommand {
 
     /// Skips the Y/N question
     #[structopt(short = "y")]
-    pub skip_confirmation: bool
+    pub skip_confirmation: bool,
 }
