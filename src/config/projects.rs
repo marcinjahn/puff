@@ -93,22 +93,30 @@ impl<'a> ProjectsRetriever<'a> {
     }
 }
 
+/// Details of a puff-managed project.
 pub struct ProjectDetails {
+    /// The project's name.
     pub name: String,
+    /// The directory where puff stores the project's files centrally.
     pub managed_dir: PathBuf,
+    /// The user's project directory where symlinks are created. `None` if not yet associated.
     pub user_dir: Option<PathBuf>,
+    /// Files managed by puff for this project, relative to `managed_dir`.
     pub files: Vec<PathBuf>,
 }
 
+/// Collects all files under `dir`, returning their paths relative to `base`.
 fn collect_files_recursively(base: &Path, dir: &Path) -> Result<Vec<PathBuf>> {
     let mut files = vec![];
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_dir() {
-            files.extend(collect_files_recursively(base, &path)?);
-        } else {
-            files.push(path.strip_prefix(base)?.to_owned());
+    let mut dirs = vec![dir.to_owned()];
+    while let Some(current) = dirs.pop() {
+        for entry in fs::read_dir(&current)? {
+            let path = entry?.path();
+            if path.is_dir() {
+                dirs.push(path);
+            } else {
+                files.push(path.strip_prefix(base)?.to_owned());
+            }
         }
     }
     Ok(files)
