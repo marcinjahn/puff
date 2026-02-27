@@ -1,4 +1,5 @@
 use clap::{Args, Parser, Subcommand};
+use clap_complete::Shell;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -8,7 +9,7 @@ use std::path::PathBuf;
 )]
 pub struct AppArgs {
     /// The path that conamn will treat as a base path for all its data storage (configs, projects)
-    #[arg(default_value = "default", env = "PUFF_CONFIG_PATH", hide = true)]
+    #[arg(long, default_value = "default", env = "PUFF_CONFIG_PATH", hide = true)]
     pub config_path: String,
 
     #[command(subcommand)]
@@ -54,6 +55,18 @@ pub enum Command {
     Project {
         #[command(subcommand)]
         subcommand: ProjectSubcommand,
+    },
+
+    /// Generates shell completions for the given shell and prints them to stdout
+    #[command(after_help = "\
+Examples:
+  bash:       puff completions bash >> ~/.bashrc
+  zsh:        puff completions zsh > ~/.zfunc/_puff  (then add ~/.zfunc to $fpath)
+  fish:       puff completions fish > ~/.config/fish/completions/puff.fish
+  powershell: puff completions powershell >> $PROFILE")]
+    Completions {
+        /// The shell to generate completions for
+        shell: Shell,
     },
 }
 

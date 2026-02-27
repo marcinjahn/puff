@@ -1,7 +1,9 @@
 use anyhow::Result;
 use app_init::AppInitializer;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::generate;
 use cli_args::{AppArgs, Command};
+use std::io;
 use commands::{
     add_command::AddCommand, file_forget_command::ForgetCommand, init_command::InitCommand,
     list_command::ListCommand, project_forget_command::ProjectForgetCommand,
@@ -30,6 +32,11 @@ fn main() {
 
 fn run() -> Result<()> {
     let args = AppArgs::parse();
+
+    if let Command::Completions { shell } = args.command {
+        generate(shell, &mut AppArgs::command(), "puff", &mut io::stdout());
+        return Ok(());
+    }
 
     let locations_provider = match args.config_path.as_str() {
         "default" => LocationsProvider::default(),
@@ -108,6 +115,7 @@ fn run() -> Result<()> {
                 )?;
             }
         },
+        Command::Completions { .. } => unreachable!(),
     }
 
     Ok(())
