@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use std::fs;
 
 use crate::{
@@ -35,8 +35,7 @@ impl<'a> ProjectForgetCommand<'a> {
         let project_details = self.projects_retriever.get_details(&name)?;
 
         if project_details.is_none() {
-            println!("Project '{name}' is not managed by puff.");
-            return Ok(());
+            bail!("Project '{name}' is not managed by puff.");
         }
 
         if !skip_confirmation
