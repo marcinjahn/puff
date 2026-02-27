@@ -5,9 +5,15 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(
     name = "puff",
-    about = "A configuration manager that keeps private configuration files from various projects in a central directory so that they can be easily synced between different dev machines."
+    about = "A configuration manager that keeps private configuration files from various projects in a central directory so that they can be easily synced between different dev machines.",
+    version,
+    disable_version_flag = true,
 )]
 pub struct AppArgs {
+    /// Print version
+    #[arg(short = 'v', long, action = clap::ArgAction::Version)]
+    version: (),
+
     /// The path that conamn will treat as a base path for all its data storage (configs, projects)
     #[arg(long, default_value = "default", env = "PUFF_CONFIG_PATH", hide = true)]
     pub config_path: String,
