@@ -23,8 +23,9 @@ pub enum Command {
     /// Adds a new file to be tracked by puff in this project.
     /// If the file does not exist, it will be created.
     Add {
-        /// File to be added
-        file: PathBuf, // TODO: Vec<PathBuf>
+        /// Files to be added
+        #[arg(num_args = 1..)]
+        files: Vec<PathBuf>,
 
         /// Adds the new file to .gitignore (.gitignre will be created if it doesn't exist)
         #[arg(short = 'g', long = "git-ignore")]
@@ -34,8 +35,9 @@ pub enum Command {
     /// Removes a file from puff. The file will stay in
     /// project's directory unless the --delete flag is added
     Forget {
-        /// File to be removed from puff
-        file: PathBuf,
+        /// Files to be removed from puff
+        #[arg(num_args = 1..)]
+        files: Vec<PathBuf>,
 
         /// Removes the file from the host
         #[arg(short = 'd', long = "delete")]

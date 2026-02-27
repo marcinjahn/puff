@@ -57,20 +57,38 @@ fn run() -> Result<()> {
             };
             command.init(&cwd)?;
         }
-        Command::Add { file, git_ignore } => {
+        Command::Add { files, git_ignore } => {
             let cwd = env::current_dir()?;
             let command = AddCommand::new(&locations_provider);
-            command.add_file(file, &cwd, git_ignore)?;
+            let mut had_error = false;
+            for file in files {
+                if let Err(e) = command.add_file(file, &cwd, git_ignore) {
+                    eprintln!("Error: {e}");
+                    had_error = true;
+                }
+            }
+            if had_error {
+                std::process::exit(1);
+            }
         }
         Command::List(options) => {
             let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
             let command = ListCommand::new(&projects_retriever);
             command.list(options.only_associated, options.only_unassociated)?;
         }
-        Command::Forget { file, delete_file } => {
+        Command::Forget { files, delete_file } => {
             let cwd = env::current_dir()?;
             let command = ForgetCommand::new(&locations_provider);
-            command.forget_file(file, &cwd, delete_file)?;
+            let mut had_error = false;
+            for file in files {
+                if let Err(e) = command.forget_file(file, &cwd, delete_file) {
+                    eprintln!("Error: {e}");
+                    had_error = true;
+                }
+            }
+            if had_error {
+                std::process::exit(1);
+            }
         }
         Command::Project { subcommand } => match subcommand {
             cli_args::ProjectSubcommand::Forget(details) => {

@@ -77,3 +77,26 @@ teardown() { teardown_puff_env; }
   run puff add .env
   assert_failure
 }
+
+@test "add: multiple files are all added" {
+  puff_init "myproject"
+  echo "a=1" >.env
+  echo "b=2" >.env.local
+  run puff add .env .env.local
+  assert_success
+  assert_symlink "$PROJECT_DIR/.env"
+  assert_symlink "$PROJECT_DIR/.env.local"
+  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject/.env"
+  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject/.env.local"
+}
+
+@test "add: partial failure exits with code 1 and processes remaining files" {
+  puff_init "myproject"
+  echo "a=1" >.env
+  echo "b=2" >.secrets
+  run puff add .env nonexistent-dir/ .secrets
+  assert_failure
+  assert_symlink "$PROJECT_DIR/.env"
+  assert_symlink "$PROJECT_DIR/.secrets"
+  assert_output_contains "Error:"
+}
