@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use clap::{Args, Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
@@ -46,6 +46,9 @@ pub enum Command {
 
     /// Lists all projects known to puff (both associated and unassociated ones)
     List(ListSubcommand),
+
+    /// Shows the puff status of the current directory
+    Status,
 
     /// Subcommand for managing projects
     Project {

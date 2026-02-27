@@ -4,10 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    config::locations::LocationsProvider,
-    fs_utils::is_symlink,
-};
+use crate::{config::locations::LocationsProvider, fs_utils::is_symlink};
 
 pub struct ForgetCommand<'a> {
     locations_provider: &'a LocationsProvider,
@@ -39,7 +36,8 @@ impl<'a> ForgetCommand<'a> {
             .parent()
             .ok_or_else(|| anyhow!("Could not retrieve user's project directory"))?;
 
-        let (project_name, project_root) = self.locations_provider.find_project_for_path(user_dir)?;
+        let (project_name, project_root) =
+            self.locations_provider.find_project_for_path(user_dir)?;
         let relative_path = user_file.strip_prefix(&project_root)?;
 
         if !self.is_file_added(&project_name, relative_path)? {

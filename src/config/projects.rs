@@ -1,8 +1,5 @@
-use super::{
-    app_config::AppConfig,
-    locations::LocationsProvider,
-};
-use anyhow::{bail, Result};
+use super::{app_config::AppConfig, locations::LocationsProvider};
+use anyhow::{Result, bail};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -25,10 +22,7 @@ impl<'a> ProjectsRetriever<'a> {
         Ok(self.app_config.projects.iter().any(|p| p.path == path))
     }
 
-    pub fn get_details(
-        &self,
-        project_name: &str,
-    ) -> Result<Option<ProjectDetails>> {
+    pub fn get_details(&self, project_name: &str) -> Result<Option<ProjectDetails>> {
         let project_config = self
             .app_config
             .projects
@@ -37,7 +31,7 @@ impl<'a> ProjectsRetriever<'a> {
 
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         if !managed_dir.exists() {
-            bail!("Project '{project_name}' does not exist.");
+            return Ok(None);
         }
 
         let files = collect_files_recursively(&managed_dir, &managed_dir)?;
@@ -66,7 +60,9 @@ impl<'a> ProjectsRetriever<'a> {
 
         if all.len() < associated.len() {
             // TODO: What should user do in such scenario?
-            bail!("puff configuration is corrupted: the registry references projects that no longer exist on disk.");
+            bail!(
+                "puff configuration is corrupted: the registry references projects that no longer exist on disk."
+            );
         }
 
         Ok(all

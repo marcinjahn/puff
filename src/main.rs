@@ -1,10 +1,11 @@
 use anyhow::Result;
 use app_init::AppInitializer;
-use cli_args::{AppArgs, Command};
 use clap::Parser;
+use cli_args::{AppArgs, Command};
 use commands::{
     add_command::AddCommand, file_forget_command::ForgetCommand, init_command::InitCommand,
     list_command::ListCommand, project_forget_command::ProjectForgetCommand,
+    status_command::StatusCommand,
 };
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
@@ -89,6 +90,12 @@ fn run() -> Result<()> {
             if had_error {
                 std::process::exit(1);
             }
+        }
+        Command::Status => {
+            let cwd = env::current_dir()?;
+            let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
+            let command = StatusCommand::new(&locations_provider, &projects_retriever);
+            command.status(&cwd)?;
         }
         Command::Project { subcommand } => match subcommand {
             cli_args::ProjectSubcommand::Forget(details) => {

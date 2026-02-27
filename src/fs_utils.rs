@@ -1,5 +1,8 @@
-use anyhow::{anyhow, Result};
-use std::{fs, path::{Path, PathBuf}};
+use anyhow::{Result, anyhow};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 /// Creates a backup of a file in the same directory. It adds ".bak"
 /// suffix to the backup file. If it creates a conflict "1"s will be
@@ -42,11 +45,10 @@ pub fn symlink_file(original: impl AsRef<Path>, link: impl AsRef<Path>) -> Resul
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
     use std::fs;
+    use std::fs::File;
 
     use super::backup_file;
     use std::io::Write;

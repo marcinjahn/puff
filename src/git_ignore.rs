@@ -15,11 +15,7 @@ impl GitIgnoreHandler {
     /// An existing .gitignore file in the user_dir will be updated
     /// with the provided file_name. If .gitignore does not exist, it
     /// will be created
-    pub fn add_to_git_ignore(
-        &self,
-        user_dir: &Path,
-        file_name: &str,
-    ) -> Result<GitIgnoreResult> {
+    pub fn add_to_git_ignore(&self, user_dir: &Path, file_name: &str) -> Result<GitIgnoreResult> {
         if !user_dir.join(".gitignore").exists() {
             self.create_git_ignore_file(user_dir, file_name)?;
 
@@ -31,22 +27,14 @@ impl GitIgnoreHandler {
         }
     }
 
-    fn create_git_ignore_file(
-        &self,
-        dir: &Path,
-        file_to_ignore: &str,
-    ) -> Result<()> {
+    fn create_git_ignore_file(&self, dir: &Path, file_to_ignore: &str) -> Result<()> {
         let mut file = File::create(dir.join(".gitignore"))?;
         writeln!(file, "{file_to_ignore}")?;
 
         Ok(())
     }
 
-    fn append_to_existing_git_ignore(
-        &self,
-        dir: &Path,
-        file_to_ignore: &str,
-    ) -> Result<()> {
+    fn append_to_existing_git_ignore(&self, dir: &Path, file_to_ignore: &str) -> Result<()> {
         let mut file = OpenOptions::new()
             .write(true)
             .append(true)

@@ -1,10 +1,9 @@
-use anyhow::{anyhow, bail, Result};
 use crate::{
     config::app_config::AppConfigManager,
     fs_utils::{backup_file, symlink_file},
 };
+use anyhow::{Result, anyhow, bail};
 use std::{fs, path::Path};
-
 
 /// Initializes a project that already exists in puff's configs
 /// directory.
@@ -31,11 +30,21 @@ impl<'a> ExistingProjectInitializer<'a> {
     }
 
     /// Initializes the user's project directory with files managed by puff
-    fn bring_in_existing_secrets(&self, _project_name: &str, user_dir: &Path, managed_dir: &Path) -> Result<()> {
+    fn bring_in_existing_secrets(
+        &self,
+        _project_name: &str,
+        user_dir: &Path,
+        managed_dir: &Path,
+    ) -> Result<()> {
         self.process_managed_dir(user_dir, managed_dir, managed_dir)
     }
 
-    fn process_managed_dir(&self, user_dir: &Path, managed_dir: &Path, current_dir: &Path) -> Result<()> {
+    fn process_managed_dir(
+        &self,
+        user_dir: &Path,
+        managed_dir: &Path,
+        current_dir: &Path,
+    ) -> Result<()> {
         for entry in current_dir.read_dir()? {
             match entry {
                 Ok(entry) => {
@@ -48,7 +57,9 @@ impl<'a> ExistingProjectInitializer<'a> {
                     }
                 }
                 Err(_err) => {
-                    bail!("The project already contains some files, but some of them could not be read");
+                    bail!(
+                        "The project already contains some files, but some of them could not be read"
+                    );
                 }
             }
         }
@@ -57,7 +68,12 @@ impl<'a> ExistingProjectInitializer<'a> {
 
     /// Sets up a single file managed by puff to be accessible in user's project
     /// directory
-    fn handle_existing_file(&self, managed_file: &Path, user_dir: &Path, relative_path: &Path) -> Result<()> {
+    fn handle_existing_file(
+        &self,
+        managed_file: &Path,
+        user_dir: &Path,
+        relative_path: &Path,
+    ) -> Result<()> {
         let managed_file_name = managed_file
             .file_name()
             .ok_or_else(|| anyhow!("Existing file {:?} could not be read", managed_file))?;
@@ -87,11 +103,11 @@ impl<'a> ExistingProjectInitializer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::{File, self};
-    use std::io::{Write, BufReader};
-    use std::path::{Path};
-    use crate::config::app_config::{AppConfigManager, AppConfig};
     use super::ExistingProjectInitializer;
+    use crate::config::app_config::{AppConfig, AppConfigManager};
+    use std::fs::{self, File};
+    use std::io::{BufReader, Write};
+    use std::path::Path;
 
     #[test]
     fn init_project_gets_added_to_the_config_file() {
@@ -107,7 +123,8 @@ mod tests {
         let user_dir = tempfile::tempdir().unwrap();
         let managed_dir = tempfile::tempdir().unwrap();
 
-        sut.init_project(project_name, user_dir.path(), managed_dir.path()).unwrap();
+        sut.init_project(project_name, user_dir.path(), managed_dir.path())
+            .unwrap();
 
         let config_file = File::open(config_file).unwrap();
         let reader = BufReader::new(config_file);
@@ -134,10 +151,13 @@ mod tests {
         create_file(&managed_dir.path().join("file1"), "abc");
         create_file(&managed_dir.path().join("file2"), "def");
 
-        sut.init_project(project_name, user_dir.path(), managed_dir.path()).unwrap();
+        sut.init_project(project_name, user_dir.path(), managed_dir.path())
+            .unwrap();
 
-        let mut symlinks = user_dir.path()
-            .read_dir().unwrap()
+        let mut symlinks = user_dir
+            .path()
+            .read_dir()
+            .unwrap()
             .map(|f| String::from(f.unwrap().path().to_str().unwrap()))
             .collect::<Vec<String>>();
         symlinks.sort();
@@ -147,12 +167,14 @@ mod tests {
         for (index, file) in symlinks.iter().enumerate() {
             if let Ok(symlink_path) = fs::read_link(file) {
                 let index = index + 1;
-                assert_eq!(managed_dir.path().join(format!("file{index}")), symlink_path);
+                assert_eq!(
+                    managed_dir.path().join(format!("file{index}")),
+                    symlink_path
+                );
             } else {
                 panic!("File is not a soft link")
             }
         }
-
     }
 
     fn create_file(path: &Path, content: &str) {

@@ -13,10 +13,10 @@ check:
 lint:
     cargo clippy
 
-fmt:
+format:
     cargo fmt
 
-fmt-check:
+format-check:
     cargo fmt --check
 
 run *args:

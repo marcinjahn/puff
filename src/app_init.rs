@@ -1,5 +1,5 @@
-use anyhow::Result;
 use crate::config::{app_config::AppConfig, locations::LocationsProvider};
+use anyhow::Result;
 use std::{
     fs::{self, File},
     io::Write,
@@ -44,8 +44,8 @@ impl<'a> AppInitializer<'a> {
 mod tests {
     use std::{fs, path::PathBuf};
 
-    use crate::config::locations::LocationsProvider;
     use super::AppInitializer;
+    use crate::config::locations::LocationsProvider;
 
     #[test]
     fn init_when_not_initialized_yet_files_get_created() {

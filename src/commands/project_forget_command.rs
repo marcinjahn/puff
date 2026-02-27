@@ -62,7 +62,9 @@ impl<'a> ProjectForgetCommand<'a> {
         if delete_files || project_details.files.is_empty() {
             println!("Project '{name}' removed.");
         } else {
-            println!("Project '{name}' removed. Managed files have been restored to the project directory.");
+            println!(
+                "Project '{name}' removed. Managed files have been restored to the project directory."
+            );
         }
         Ok(())
     }

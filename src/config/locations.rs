@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use directories::ProjectDirs;
 use std::path::{Path, PathBuf};
 
@@ -12,7 +12,9 @@ pub struct LocationsProvider {
 
 impl LocationsProvider {
     pub fn new(base_config_path: PathBuf) -> LocationsProvider {
-        LocationsProvider { config_base_path: base_config_path }
+        LocationsProvider {
+            config_base_path: base_config_path,
+        }
     }
 
     pub fn get_base_config_path(&self) -> Result<PathBuf> {

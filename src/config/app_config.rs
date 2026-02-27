@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::File,
@@ -108,10 +108,10 @@ impl AppConfigManager {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, path::Path};
     use std::io::Write;
+    use std::{fs::File, path::Path};
 
-    use super::{AppConfigManager, Project, AppConfig};
+    use super::{AppConfig, AppConfigManager, Project};
 
     #[test]
     fn get_config_there_are_zero_projects_proper_config_gets_returned() {
@@ -152,12 +152,18 @@ mod tests {
         let config_manager = AppConfigManager::new(config_file.clone()).unwrap();
 
         let new_proj_dir = tempfile::tempdir().unwrap();
-        config_manager.add_project("new_proj", new_proj_dir.path()).unwrap();
+        config_manager
+            .add_project("new_proj", new_proj_dir.path())
+            .unwrap();
 
         let file = config_manager.get_config().unwrap();
 
         assert_eq!(2, file.projects.len());
-        assert!(file.projects.iter().any(|p| p.name == "new_proj" && p.path.to_str() == new_proj_dir.path().to_str()));
+        assert!(
+            file.projects
+                .iter()
+                .any(|p| p.name == "new_proj" && p.path.to_str() == new_proj_dir.path().to_str())
+        );
     }
 
     #[test]

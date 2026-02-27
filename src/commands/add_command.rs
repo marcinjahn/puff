@@ -1,7 +1,5 @@
 use crate::{
-    config::locations::LocationsProvider,
-    fs_utils::symlink_file,
-    git_ignore::{GitIgnoreHandler, GitIgnoreResult},
+    config::locations::LocationsProvider, fs_utils::symlink_file, git_ignore::GitIgnoreHandler,
 };
 use anyhow::{Result, anyhow, bail};
 use std::{

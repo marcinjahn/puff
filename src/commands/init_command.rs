@@ -1,10 +1,10 @@
-use anyhow::{bail, Result};
 use crate::{
     config::{
         app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
     },
     project_init::existing::ExistingProjectInitializer,
 };
+use anyhow::{Result, bail};
 use std::{fs, path::Path};
 
 pub struct InitCommand<'a> {
@@ -44,11 +44,7 @@ impl<'a> InitCommand<'a> {
         Ok(())
     }
 
-    fn handle_with_unassociated(
-        &self,
-        unassociated: Vec<String>,
-        cwd: &Path,
-    ) -> Result<()> {
+    fn handle_with_unassociated(&self, unassociated: Vec<String>, cwd: &Path) -> Result<()> {
         println!("Some projects in puff are not yet associated with a path on this machine.");
         println!("Associate one with the current directory, or create a new project.");
         let choice = self.ask_about_unassociated(&unassociated)?;
@@ -98,10 +94,7 @@ impl<'a> InitCommand<'a> {
         }
     }
 
-    fn ask_about_unassociated(
-        &self,
-        unassociated: &'a [String],
-    ) -> Result<UserChoice<'a>> {
+    fn ask_about_unassociated(&self, unassociated: &'a [String]) -> Result<UserChoice<'a>> {
         println!("0) Create a new project");
         for (i, project) in unassociated.iter().enumerate() {
             println!("{}) Associate with the project '{}'", i + 1, project);
@@ -123,7 +116,10 @@ impl<'a> InitCommand<'a> {
             }
         }
 
-        println!("Unrecognized option '{}'. Choose from the list below, or press Ctrl+C to cancel.", choice.trim());
+        println!(
+            "Unrecognized option '{}'. Choose from the list below, or press Ctrl+C to cancel.",
+            choice.trim()
+        );
 
         self.ask_about_unassociated(unassociated)
     }
