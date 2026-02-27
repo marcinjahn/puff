@@ -61,7 +61,7 @@ impl<'a> ForgetCommand<'a> {
 
         self.remove_managed_file(&project_name, relative_path)?;
 
-        println!("Removed {file_name:?} from project '{project_name}'.");
+        println!("Restored {file_name:?} in project '{project_name}'.");
         Ok(())
     }
 
@@ -85,10 +85,10 @@ impl<'a> ForgetCommand<'a> {
         fs::remove_file(&managed_file)?;
 
         // clean up empty subdirectory (ignore errors — dir may be non-empty or be the root)
-        if let Some(parent) = managed_file.parent() {
-            if parent != managed_dir {
-                let _ = fs::remove_dir(parent);
-            }
+        if let Some(parent) = managed_file.parent()
+            && parent != managed_dir
+        {
+            let _ = fs::remove_dir(parent);
         }
 
         Ok(())
