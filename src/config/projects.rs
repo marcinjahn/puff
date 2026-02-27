@@ -35,12 +35,18 @@ impl<'a> ProjectsRetriever<'a> {
         }
 
         let files = collect_files_recursively(&managed_dir, &managed_dir)?;
-
-        Ok(Some(ProjectDetails {
+        let info = ProjectInfo {
             name: project_name.to_owned(),
             managed_dir,
-            user_dir: project_config.map(|config| config.path.clone()),
             files,
+        };
+
+        Ok(Some(match project_config {
+            Some(config) => ProjectDetails::Associated(AssociatedProject {
+                info,
+                user_dir: config.path.clone(),
+            }),
+            None => ProjectDetails::Unassociated(info),
         }))
     }
 
@@ -93,16 +99,38 @@ impl<'a> ProjectsRetriever<'a> {
     }
 }
 
-/// Details of a puff-managed project.
-pub struct ProjectDetails {
-    /// The project's name.
+/// Fields common to all puff-managed projects regardless of association status.
+#[non_exhaustive]
+pub struct ProjectInfo {
     pub name: String,
-    /// The directory where puff stores the project's files centrally.
     pub managed_dir: PathBuf,
-    /// The user's project directory where symlinks are created. `None` if not yet associated.
-    pub user_dir: Option<PathBuf>,
-    /// Files managed by puff for this project, relative to `managed_dir`.
     pub files: Vec<PathBuf>,
+}
+
+#[non_exhaustive]
+pub struct AssociatedProject {
+    pub info: ProjectInfo,
+    pub user_dir: PathBuf,
+}
+
+/// Details of a puff-managed project.
+#[non_exhaustive]
+pub enum ProjectDetails {
+    /// Project is "connected" via symlinks to actual files on user's machine
+    Associated(AssociatedProject),
+
+    /// Project is available in puff, probably was migrated from another machine, but it is not yet
+    /// connected to any directory on user's machine.
+    Unassociated(ProjectInfo),
+}
+
+impl ProjectDetails {
+    pub fn info(&self) -> &ProjectInfo {
+        match self {
+            ProjectDetails::Associated(associated) => &associated.info,
+            ProjectDetails::Unassociated(info) => info,
+        }
+    }
 }
 
 /// Collects all files under `dir`, returning their paths relative to `base`.

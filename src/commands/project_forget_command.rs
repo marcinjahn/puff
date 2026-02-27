@@ -4,7 +4,7 @@ use std::fs;
 use crate::{
     config::{
         app_config::AppConfigManager,
-        projects::{ProjectDetails, ProjectsRetriever},
+        projects::{AssociatedProject, ProjectDetails, ProjectsRetriever},
     },
     fs_utils::{get_backup_path, is_symlink},
     io_utils::confirm,
@@ -50,16 +50,18 @@ impl<'a> ProjectForgetCommand<'a> {
 
         let project_details = project_details.unwrap();
 
-        if delete_files {
-            self.remove_symlinks(&project_details)?;
-        } else {
-            self.replace_symlinks(&project_details)?;
+        if let ProjectDetails::Associated(associated) = &project_details {
+            if delete_files {
+                self.remove_symlinks(associated)?;
+            } else {
+                self.replace_symlinks(associated)?;
+            }
         }
 
         self.remove_managed_dir(&project_details)?;
         self.update_config(&project_details)?;
 
-        if delete_files || project_details.files.is_empty() {
+        if delete_files || project_details.info().files.is_empty() {
             println!("Project '{name}' removed.");
         } else {
             println!(
@@ -70,46 +72,37 @@ impl<'a> ProjectForgetCommand<'a> {
     }
 
     fn remove_managed_dir(&self, project_details: &ProjectDetails) -> Result<()> {
-        fs::remove_dir_all(&project_details.managed_dir)?;
+        fs::remove_dir_all(&project_details.info().managed_dir)?;
         Ok(())
     }
 
-    fn remove_symlinks(&self, project_details: &ProjectDetails) -> Result<()> {
-        for file_name in &project_details.files {
-            let path = project_details.user_dir.as_ref().unwrap().join(file_name);
+    fn remove_symlinks(&self, associated: &AssociatedProject) -> Result<()> {
+        for file_name in &associated.info.files {
+            let path = associated.user_dir.join(file_name);
             if is_symlink(&path)? {
                 fs::remove_file(path)?;
             }
         }
-
         Ok(())
     }
 
-    fn replace_symlinks(&self, project_details: &ProjectDetails) -> Result<()> {
-        if project_details.user_dir.is_none() {
-            return Ok(());
-        }
-        let user_path = project_details.user_dir.as_ref().unwrap();
-
-        for file in &project_details.files {
-            let mut target_path = user_path.join(file);
+    fn replace_symlinks(&self, associated: &AssociatedProject) -> Result<()> {
+        for file in &associated.info.files {
+            let mut target_path = associated.user_dir.join(file);
             fs::create_dir_all(target_path.parent().unwrap())?;
             if !is_symlink(&target_path)? {
                 target_path = get_backup_path(&target_path)?;
             } else {
                 fs::remove_file(&target_path)?;
             }
-
-            fs::copy(project_details.managed_dir.join(file), target_path)?;
+            fs::copy(associated.info.managed_dir.join(file), target_path)?;
         }
-
         Ok(())
     }
 
     fn update_config(&self, project_details: &ProjectDetails) -> Result<()> {
         self.app_config_manager
-            .remove_project(&project_details.name)?;
-
+            .remove_project(&project_details.info().name)?;
         Ok(())
     }
 }
