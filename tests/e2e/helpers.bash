@@ -1,5 +1,5 @@
 REPO_ROOT="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
-export PATH="$REPO_ROOT/target/debug:$PATH"
+export PATH="$REPO_ROOT/target/release:$PATH"
 
 setup_puff_env() {
   export PUFF_CONFIG_PATH
