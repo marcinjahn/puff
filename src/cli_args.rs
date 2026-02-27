@@ -8,7 +8,7 @@ use clap::{Args, Parser, Subcommand};
 )]
 pub struct AppArgs {
     /// The path that conamn will treat as a base path for all its data storage (configs, projects)
-    #[arg(default_value = "default", env = "CONFIG_PATH", hide = true)]
+    #[arg(default_value = "default", env = "PUFF_CONFIG_PATH", hide = true)]
     pub config_path: String,
 
     #[command(subcommand)]
