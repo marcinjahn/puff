@@ -6,7 +6,7 @@ use std::path::PathBuf;
 #[command(
     name = "puff",
     about = "A configuration manager that keeps private configuration files from various projects in a central directory so that they can be easily synced between different dev machines.",
-    version,
+    version = concat!(env!("CARGO_PKG_VERSION"), " (", env!("GIT_COMMIT_HASH"), ")"),
     disable_version_flag = true,
 )]
 pub struct AppArgs {
