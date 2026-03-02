@@ -153,13 +153,15 @@ mod tests {
 
     #[test]
     fn add_file_when_project_does_not_exist() {
-        let puff_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
         let current_dir = tempfile::tempdir().unwrap();
-        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
-        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        let locations_provider =
+            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
 
         let user_file = current_dir.path().join("file");
-        let config_file = puff_dir.path().join("config.json");
+        let config_file = config_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(file, "{{\"projects\":[]}}").unwrap();
 
@@ -176,13 +178,15 @@ mod tests {
 
     #[test]
     fn add_file_fresh_scenario() {
-        let puff_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
         let current_dir = tempfile::tempdir().unwrap();
-        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
-        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        let locations_provider =
+            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
 
         let user_file = current_dir.path().join("file");
-        let config_file = puff_dir.path().join("config.json");
+        let config_file = config_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(
             file,
@@ -198,12 +202,14 @@ mod tests {
 
     #[test]
     fn add_file_in_subdirectory() {
-        let puff_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
-        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
-        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        let locations_provider =
+            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
 
-        let config_file = puff_dir.path().join("config.json");
+        let config_file = config_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(
             file,
@@ -219,18 +225,20 @@ mod tests {
         let sut = AddCommand::new(&locations_provider);
         sut.add_file(user_file, project_root.path(), false).unwrap();
 
-        let managed_file = puff_dir.path().join("configs/proj1/config/secrets.env");
+        let managed_file = data_dir.path().join("projects/proj1/config/secrets.env");
         assert!(managed_file.exists());
     }
 
     #[test]
     fn add_file_from_subdirectory_cwd() {
-        let puff_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
-        fs::create_dir_all(puff_dir.path().join("configs/proj1")).unwrap();
-        let locations_provider = LocationsProvider::new(puff_dir.path().to_path_buf());
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        let locations_provider =
+            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
 
-        let config_file = puff_dir.path().join("config.json");
+        let config_file = config_dir.path().join("config.json");
         let mut file = File::create(&config_file).unwrap();
         write!(
             file,
@@ -248,7 +256,7 @@ mod tests {
         sut.add_file(std::path::PathBuf::from("secrets.env"), &subdir, false)
             .unwrap();
 
-        let managed_file = puff_dir.path().join("configs/proj1/config/secrets.env");
+        let managed_file = data_dir.path().join("projects/proj1/config/secrets.env");
         assert!(managed_file.exists());
 
         let symlink_target = fs::read_link(&user_file).unwrap();

@@ -4,13 +4,15 @@ export PATH="$REPO_ROOT/target/release:$PATH"
 setup_puff_env() {
   export PUFF_CONFIG_PATH
   PUFF_CONFIG_PATH="$(mktemp -d)"
+  export PUFF_DATA_PATH
+  PUFF_DATA_PATH="$(mktemp -d)"
   export PROJECT_DIR
   PROJECT_DIR="$(mktemp -d)"
   cd "$PROJECT_DIR" || return 1
 }
 
 teardown_puff_env() {
-  rm -rf "$PUFF_CONFIG_PATH" "$PROJECT_DIR"
+  rm -rf "$PUFF_CONFIG_PATH" "$PUFF_DATA_PATH" "$PROJECT_DIR"
 }
 
 # Initializes current directory as a puff project with the given name.

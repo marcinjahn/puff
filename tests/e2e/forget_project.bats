@@ -30,7 +30,7 @@ teardown() { teardown_puff_env; }
   echo "secret=123" >.env
   puff add .env
   puff project forget -y myproject
-  assert_not_exists "$PUFF_CONFIG_PATH/configs/myproject"
+  assert_not_exists "$PUFF_DATA_PATH/projects/myproject"
 }
 
 @test "project forget: removes project from config" {

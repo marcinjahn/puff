@@ -81,7 +81,7 @@ impl<'a> ProjectsRetriever<'a> {
     /// Returns names of all the projects that puff stores (some of them might
     /// not be associated yet)
     fn get_all_projects(&self) -> Result<Vec<String>> {
-        let location = self.locations_provider.get_configs_config_path();
+        let location = self.locations_provider.get_projects_data_path();
         let paths = fs::read_dir(location)?;
 
         let mut projects = vec![];
@@ -163,8 +163,12 @@ mod tests {
     #[test]
     fn is_associated_when_associated_project_is_provided_true_is_returned() {
         let checked_dir = tempfile::tempdir().unwrap();
-        let base_dir = tempfile::tempdir().unwrap();
-        let locations_provider = LocationsProvider::new(base_dir.path().to_path_buf());
+        let config_dir = tempfile::tempdir().unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
         let app_config = AppConfig {
             projects: vec![Project {
                 name: String::from("proj"),
@@ -182,8 +186,12 @@ mod tests {
 
     #[test]
     fn is_associated_when_not_associated_project_is_provided_false_is_returned() {
-        let base_dir = tempfile::tempdir().unwrap();
-        let locations_provider = LocationsProvider::new(base_dir.path().to_path_buf());
+        let config_dir = tempfile::tempdir().unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
         let app_config = AppConfig { projects: vec![] };
 
         let sut = ProjectsRetriever::new(app_config, &locations_provider);
@@ -200,12 +208,16 @@ mod tests {
         let proj_2_dir = tempfile::tempdir().unwrap();
         let proj_3_dir = tempfile::tempdir().unwrap();
 
-        let base_dir = tempfile::tempdir().unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj1")).unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj2")).unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj3")).unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj2")).unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj3")).unwrap();
 
-        let locations_provider = LocationsProvider::new(base_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
         let app_config = AppConfig {
             projects: vec![
                 Project {
@@ -238,12 +250,16 @@ mod tests {
         let proj_1_dir = tempfile::tempdir().unwrap();
         let proj_2_dir = tempfile::tempdir().unwrap();
 
-        let base_dir = tempfile::tempdir().unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj1")).unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj2")).unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj3")).unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj2")).unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj3")).unwrap();
 
-        let locations_provider = LocationsProvider::new(base_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
         let app_config = AppConfig {
             projects: vec![
                 Project {
@@ -272,12 +288,16 @@ mod tests {
         let proj_1_dir = tempfile::tempdir().unwrap();
         let proj_2_dir = tempfile::tempdir().unwrap();
 
-        let base_dir = tempfile::tempdir().unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj1")).unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj2")).unwrap();
-        fs::create_dir_all(base_dir.path().join("configs/proj3")).unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj2")).unwrap();
+        fs::create_dir_all(data_dir.path().join("projects/proj3")).unwrap();
 
-        let locations_provider = LocationsProvider::new(base_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
         let app_config = AppConfig {
             projects: vec![
                 Project {
@@ -306,10 +326,14 @@ mod tests {
 
     #[test]
     fn get_all_projects_when_there_are_no_projects_then_empty_vector_is_returned() {
-        let base_dir = tempfile::tempdir().unwrap();
-        fs::create_dir_all(base_dir.path().join("configs")).unwrap();
+        let data_dir = tempfile::tempdir().unwrap();
+        let config_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(data_dir.path().join("projects")).unwrap();
 
-        let locations_provider = LocationsProvider::new(base_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
         let app_config = AppConfig { projects: vec![] };
 
         let sut = ProjectsRetriever::new(app_config, &locations_provider);
