@@ -32,7 +32,7 @@ teardown() { teardown_puff_env; }
 
 @test "list: shows unassociated project" {
   puff_init "myproject"
-  mkdir -p "$PUFF_CONFIG_PATH/configs/orphan"
+  mkdir -p "$PUFF_DATA_PATH/projects/orphan"
   run puff list
   assert_success
   assert_output_contains "orphan"
@@ -40,7 +40,7 @@ teardown() { teardown_puff_env; }
 
 @test "list -a: shows only associated projects" {
   puff_init "myproject"
-  mkdir -p "$PUFF_CONFIG_PATH/configs/orphan"
+  mkdir -p "$PUFF_DATA_PATH/projects/orphan"
   run puff list -a
   assert_success
   assert_output_contains "myproject"
@@ -49,7 +49,7 @@ teardown() { teardown_puff_env; }
 
 @test "list -u: shows only unassociated projects" {
   puff_init "myproject"
-  mkdir -p "$PUFF_CONFIG_PATH/configs/orphan"
+  mkdir -p "$PUFF_DATA_PATH/projects/orphan"
   run puff list -u
   assert_success
   assert_output_contains "orphan"

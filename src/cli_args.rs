@@ -14,9 +14,13 @@ pub struct AppArgs {
     #[arg(short = 'v', long, action = clap::ArgAction::Version)]
     version: (),
 
-    /// The path that conamn will treat as a base path for all its data storage (configs, projects)
+    /// The base path for puff's configuration (config.json)
     #[arg(long, default_value = "default", env = "PUFF_CONFIG_PATH", hide = true)]
     pub config_path: String,
+
+    /// The base path for puff's data storage (projects)
+    #[arg(long, default_value = "default", env = "PUFF_DATA_PATH", hide = true)]
+    pub data_path: String,
 
     #[command(subcommand)]
     pub command: Command,

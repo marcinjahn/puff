@@ -27,7 +27,7 @@ teardown() { teardown_puff_env; }
   echo "secret=123" >.env
   puff add .env
   puff forget .env
-  assert_not_exists "$PUFF_CONFIG_PATH/configs/myproject/.env"
+  assert_not_exists "$PUFF_DATA_PATH/projects/myproject/.env"
 }
 
 @test "forget file: with --delete removes file without restoring" {
@@ -52,7 +52,7 @@ teardown() { teardown_puff_env; }
   echo "val=1" >config/settings.env
   puff add config/settings.env
   puff forget config/settings.env
-  assert_not_exists "$PUFF_CONFIG_PATH/configs/myproject/config"
+  assert_not_exists "$PUFF_DATA_PATH/projects/myproject/config"
 }
 
 @test "forget file: multiple files are all forgotten" {
@@ -66,8 +66,8 @@ teardown() { teardown_puff_env; }
   assert_not_symlink "$PROJECT_DIR/.env.local"
   assert_file_exists "$PROJECT_DIR/.env"
   assert_file_exists "$PROJECT_DIR/.env.local"
-  assert_not_exists "$PUFF_CONFIG_PATH/configs/myproject/.env"
-  assert_not_exists "$PUFF_CONFIG_PATH/configs/myproject/.env.local"
+  assert_not_exists "$PUFF_DATA_PATH/projects/myproject/.env"
+  assert_not_exists "$PUFF_DATA_PATH/projects/myproject/.env.local"
 }
 
 @test "forget file: partial failure exits with code 1 and processes remaining files" {

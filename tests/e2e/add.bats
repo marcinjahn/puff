@@ -9,7 +9,7 @@ teardown() { teardown_puff_env; }
   run puff add .env
   assert_success
   assert_symlink "$PROJECT_DIR/.env"
-  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject/.env"
+  assert_file_exists "$PUFF_DATA_PATH/projects/myproject/.env"
 }
 
 @test "add: existing file copies content to managed dir" {
@@ -17,7 +17,7 @@ teardown() { teardown_puff_env; }
   echo "secret=123" >.env
   run puff add .env
   assert_success
-  assert_file_content "$PUFF_CONFIG_PATH/configs/myproject/.env" "secret=123"
+  assert_file_content "$PUFF_DATA_PATH/projects/myproject/.env" "secret=123"
 }
 
 @test "add: existing file is replaced with symlink" {
@@ -60,13 +60,13 @@ teardown() { teardown_puff_env; }
   run puff add config/database.env
   assert_success
   assert_symlink "$PROJECT_DIR/config/database.env"
-  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject/config/database.env"
+  assert_file_exists "$PUFF_DATA_PATH/projects/myproject/config/database.env"
 }
 
 @test "add: file already in managed dir creates symlink without error" {
   puff_init "myproject"
   # Simulate managed file already existing (e.g. copied from another machine)
-  echo "token=xyz" >"$PUFF_CONFIG_PATH/configs/myproject/.env"
+  echo "token=xyz" >"$PUFF_DATA_PATH/projects/myproject/.env"
   run puff add .env
   assert_success
   assert_symlink "$PROJECT_DIR/.env"
@@ -86,8 +86,8 @@ teardown() { teardown_puff_env; }
   assert_success
   assert_symlink "$PROJECT_DIR/.env"
   assert_symlink "$PROJECT_DIR/.env.local"
-  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject/.env"
-  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject/.env.local"
+  assert_file_exists "$PUFF_DATA_PATH/projects/myproject/.env"
+  assert_file_exists "$PUFF_DATA_PATH/projects/myproject/.env.local"
 }
 
 @test "add: partial failure exits with code 1 and processes remaining files" {

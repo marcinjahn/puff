@@ -14,7 +14,7 @@ teardown() { teardown_puff_env; }
 
 @test "init: creates managed directory" {
   puff_init "myproject"
-  assert_file_exists "$PUFF_CONFIG_PATH/configs/myproject"
+  assert_file_exists "$PUFF_DATA_PATH/projects/myproject"
 }
 
 @test "init: project appears in puff list" {
@@ -34,7 +34,7 @@ teardown() { teardown_puff_env; }
   local named_dir
   named_dir="$(mktemp -d)"
   # Send empty line — puff should fall back to using the directory's basename
-  run bash -c "echo '' | PUFF_CONFIG_PATH='$PUFF_CONFIG_PATH' puff init"
+  run bash -c "echo '' | PUFF_CONFIG_PATH='$PUFF_CONFIG_PATH' PUFF_DATA_PATH='$PUFF_DATA_PATH' puff init"
   assert_success
   rm -rf "$named_dir"
 }
@@ -45,20 +45,22 @@ teardown() { teardown_puff_env; }
   echo "secret=abc" >.env
   puff add .env
 
-  # Simulate new machine: copy puff home but wipe config associations
-  local new_puff_home
-  new_puff_home="$(mktemp -d)"
-  cp -r "$PUFF_CONFIG_PATH/." "$new_puff_home/"
-  echo '{"projects":[]}' >"$new_puff_home/config.json"
+  # Simulate new machine: copy puff config and data but wipe config associations
+  local new_config_home new_data_home
+  new_config_home="$(mktemp -d)"
+  new_data_home="$(mktemp -d)"
+  cp -r "$PUFF_CONFIG_PATH/." "$new_config_home/"
+  cp -r "$PUFF_DATA_PATH/." "$new_data_home/"
+  echo '{"projects":[]}' >"$new_config_home/config.json"
 
   # Remove symlink (simulates fresh checkout, no local symlink yet)
   rm "$PROJECT_DIR/.env"
 
   # Init: should detect unassociated project and ask to select; send "1" to pick it
-  run bash -c "echo '1' | PUFF_CONFIG_PATH='$new_puff_home' puff init"
+  run bash -c "echo '1' | PUFF_CONFIG_PATH='$new_config_home' PUFF_DATA_PATH='$new_data_home' puff init"
   assert_success
   assert_symlink "$PROJECT_DIR/.env"
   assert_file_content "$PROJECT_DIR/.env" "secret=abc"
 
-  rm -rf "$new_puff_home"
+  rm -rf "$new_config_home" "$new_data_home"
 }

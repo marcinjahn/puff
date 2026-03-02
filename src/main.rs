@@ -21,6 +21,7 @@ mod config;
 mod fs_utils;
 mod git_ignore;
 mod io_utils;
+mod migration;
 mod project_init;
 
 fn main() {
@@ -38,9 +39,27 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    let locations_provider = match args.config_path.as_str() {
-        "default" => LocationsProvider::default(),
-        other => LocationsProvider::new(Path::new(other).to_path_buf()),
+    let locations_provider = {
+        let config_path = match args.config_path.as_str() {
+            "default" => None,
+            other => Some(Path::new(other).to_path_buf()),
+        };
+        let data_path = match args.data_path.as_str() {
+            "default" => None,
+            other => Some(Path::new(other).to_path_buf()),
+        };
+        match (config_path, data_path) {
+            (None, None) => LocationsProvider::default(),
+            (Some(c), None) => {
+                let default = LocationsProvider::default();
+                LocationsProvider::new(c, default.get_base_data_path()?)
+            }
+            (None, Some(d)) => {
+                let default = LocationsProvider::default();
+                LocationsProvider::new(default.get_base_config_path()?, d)
+            }
+            (Some(c), Some(d)) => LocationsProvider::new(c, d),
+        }
     };
 
     AppInitializer {
