@@ -45,15 +45,22 @@ teardown() { teardown_puff_env; }
 }
 
 @test "migration: symlinks updated after migration" {
-  # Set up old-style layout with an associated project + symlink
+  # Set up old-style layout with an associated project + symlink.
+  # Use native_path so that config.json and symlink targets contain
+  # Windows-native paths when running under MSYS/Git Bash — the Rust
+  # binary cannot resolve MSYS-style paths like /tmp/tmp.XXX.
   mkdir -p "$PUFF_CONFIG_PATH/configs/myproject"
   echo "SECRET=1" >"$PUFF_CONFIG_PATH/configs/myproject/.env"
   cat >"$PUFF_CONFIG_PATH/config.json" <<EOF
-{"projects":[{"name":"myproject","id":"1","path":"$PROJECT_DIR"}]}
+{"projects":[{"name":"myproject","id":"1","path":"$(native_path "$PROJECT_DIR")"}]}
 EOF
 
+  # On Windows (MSYS/Git Bash), ln -s creates file copies by default (deepcopy
+  # mode), not real NTFS symlinks. The Rust binary needs real symlinks.
+  export MSYS="${MSYS:+$MSYS }winsymlinks:nativestrict"
+
   # Create symlink in project dir pointing to old location
-  ln -s "$PUFF_CONFIG_PATH/configs/myproject/.env" "$PROJECT_DIR/.env"
+  ln -s "$(native_path "$PUFF_CONFIG_PATH/configs/myproject/.env")" "$PROJECT_DIR/.env"
 
   run puff list
   assert_success
@@ -62,6 +69,6 @@ EOF
   assert_symlink "$PROJECT_DIR/.env"
   assert_file_content "$PROJECT_DIR/.env" "SECRET=1"
   local target
-  target="$(readlink "$PROJECT_DIR/.env")"
-  echo "$target" | grep -qF "$PUFF_DATA_PATH/projects/"
+  target="$(native_path "$(readlink "$PROJECT_DIR/.env")")"
+  echo "$target" | grep -qF "$(native_path "$PUFF_DATA_PATH")/projects/"
 }
