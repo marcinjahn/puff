@@ -67,6 +67,14 @@ pub enum Command {
         subcommand: ProjectSubcommand,
     },
 
+    /// Opens a new shell in the puff data directory where managed files are stored.
+    /// Use --print to just print the path instead.
+    Cd {
+        /// Print the path instead of spawning a shell
+        #[arg(short = 'p', long = "print")]
+        print: bool,
+    },
+
     /// Generates shell completions for the given shell and prints them to stdout
     #[command(after_help = "\
 Examples:
