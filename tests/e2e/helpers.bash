@@ -1,6 +1,15 @@
 REPO_ROOT="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
 export PATH="$REPO_ROOT/target/release:$PATH"
 
+# Converts an MSYS/Cygwin path to Windows-native format (no-op on Unix)
+native_path() {
+  if command -v cygpath &>/dev/null; then
+    cygpath -m "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
 setup_puff_env() {
   export PUFF_CONFIG_PATH
   PUFF_CONFIG_PATH="$(mktemp -d)"
