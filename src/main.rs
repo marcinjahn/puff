@@ -3,7 +3,6 @@ use app_init::AppInitializer;
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use cli_args::{AppArgs, Command};
-use std::io;
 use commands::{
     add_command::AddCommand, file_forget_command::ForgetCommand, init_command::InitCommand,
     list_command::ListCommand, project_forget_command::ProjectForgetCommand,
@@ -12,6 +11,7 @@ use commands::{
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
+use std::io;
 use std::{env, path::Path};
 
 mod app_init;
@@ -134,6 +134,7 @@ fn run() -> Result<()> {
                 )?;
             }
         },
+        // handled up above
         Command::Completions { .. } => unreachable!(),
     }
 

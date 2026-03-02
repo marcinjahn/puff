@@ -11,7 +11,11 @@ env:
 
 jobs:
   unit-tests:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - name: Build
@@ -20,13 +24,29 @@ jobs:
         run: cargo test --verbose
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v6
-      - name: Install bats
+      - name: Install bats (Linux)
+        if: runner.os == 'Linux'
         run: |
           git clone https://github.com/bats-core/bats-core.git /tmp/bats-core --depth=1
           sudo /tmp/bats-core/install.sh /usr/local
+      - name: Install bats (macOS)
+        if: runner.os == 'macOS'
+        run: brew install bats-core
+      - name: Install bats (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git clone https://github.com/bats-core/bats-core.git "$HOME/bats-core" --depth=1
+          echo "$HOME/bats-core/bin" >> "$GITHUB_PATH"
       - name: Build binary
         run: cargo build --release
       - name: Run e2e tests
