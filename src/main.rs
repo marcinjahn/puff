@@ -4,9 +4,9 @@ use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use cli_args::{AppArgs, Command};
 use commands::{
-    add_command::AddCommand, file_forget_command::ForgetCommand, init_command::InitCommand,
-    list_command::ListCommand, project_forget_command::ProjectForgetCommand,
-    status_command::StatusCommand,
+    add_command::AddCommand, cd_command::CdCommand, file_forget_command::ForgetCommand,
+    init_command::InitCommand, list_command::ListCommand,
+    project_forget_command::ProjectForgetCommand, status_command::StatusCommand,
 };
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
@@ -61,6 +61,12 @@ fn run() -> Result<()> {
             (Some(c), Some(d)) => LocationsProvider::new(c, d),
         }
     };
+
+    if let Command::Cd { print } = args.command {
+        let cd = CdCommand::new(&locations_provider);
+        cd.cd(print)?;
+        return Ok(());
+    }
 
     AppInitializer {
         locations_provider: &locations_provider,
@@ -135,7 +141,7 @@ fn run() -> Result<()> {
             }
         },
         // handled up above
-        Command::Completions { .. } => unreachable!(),
+        Command::Completions { .. } | Command::Cd { .. } => unreachable!(),
     }
 
     Ok(())

@@ -93,6 +93,16 @@ assert_output_contains() {
   fi
 }
 
+is_windows() {
+  command -v cygpath &>/dev/null
+}
+
+# Normalizes output for cross-platform path comparison:
+# converts backslashes to forward slashes and strips carriage returns.
+normalize_output() {
+  tr '\\' '/' | tr -d '\r'
+}
+
 assert_output_not_contains() {
   if echo "$output" | grep -qF "$1"; then
     echo "Expected output to NOT contain: $1" >&2
