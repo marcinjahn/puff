@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   managed files if it is
 - `completions` command to generate shell completions
 - support multiple files provided to `add` and `forget` commands
+- a `cd` command that spawns subshell at the puff's projects directory - user can backup the files
 - e2e tests
 
 ### Changed
