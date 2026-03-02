@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `project rm` command to `project forget`
 - Updated all dependencies; migrated to Rust 2024 edition
 - Improved error messages
+- projects are now stored in `XDG_DATA_HOME/puff/projects` instead of `XDG_CONFIG_HOME/puff/configs`
 
 ### Removed
 
