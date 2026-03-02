@@ -145,11 +145,10 @@ impl<'a> AddCommand<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::{self, File};
+    use std::fs;
 
     use super::AddCommand;
-    use crate::config::locations::LocationsProvider;
-    use std::io::Write;
+    use crate::config::{app_config::{AppConfig, Project}, locations::LocationsProvider};
 
     #[test]
     fn add_file_when_project_does_not_exist() {
@@ -162,8 +161,8 @@ mod tests {
 
         let user_file = current_dir.path().join("file");
         let config_file = config_dir.path().join("config.json");
-        let mut file = File::create(&config_file).unwrap();
-        write!(file, "{{\"projects\":[]}}").unwrap();
+        let config = AppConfig { projects: vec![] };
+        fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
         let sut = AddCommand::new(&locations_provider);
 
@@ -187,13 +186,10 @@ mod tests {
 
         let user_file = current_dir.path().join("file");
         let config_file = config_dir.path().join("config.json");
-        let mut file = File::create(&config_file).unwrap();
-        write!(
-            file,
-            "{{\"projects\":[{{\"name\":\"proj1\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
-            current_dir.path().to_str().unwrap()
-        )
-        .unwrap();
+        let config = AppConfig {
+            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: current_dir.path().to_path_buf() }],
+        };
+        fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
         let sut = AddCommand::new(&locations_provider);
 
@@ -210,13 +206,10 @@ mod tests {
             LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
 
         let config_file = config_dir.path().join("config.json");
-        let mut file = File::create(&config_file).unwrap();
-        write!(
-            file,
-            "{{\"projects\":[{{\"name\":\"proj1\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
-            project_root.path().to_str().unwrap()
-        )
-        .unwrap();
+        let config = AppConfig {
+            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+        };
+        fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
         let subdir = project_root.path().join("config");
         fs::create_dir_all(&subdir).unwrap();
@@ -239,13 +232,10 @@ mod tests {
             LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
 
         let config_file = config_dir.path().join("config.json");
-        let mut file = File::create(&config_file).unwrap();
-        write!(
-            file,
-            "{{\"projects\":[{{\"name\":\"proj1\", \"path\":\"{}\", \"id\":\"1\"}}]}}",
-            project_root.path().to_str().unwrap()
-        )
-        .unwrap();
+        let config = AppConfig {
+            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+        };
+        fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
         let subdir = project_root.path().join("config");
         fs::create_dir_all(&subdir).unwrap();
