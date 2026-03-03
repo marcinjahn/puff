@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::fs;
 use std::process::Command;
 
@@ -10,9 +10,7 @@ pub struct CdCommand<'a> {
 
 impl<'a> CdCommand<'a> {
     pub fn new(locations_provider: &'a LocationsProvider) -> Self {
-        CdCommand {
-            locations_provider,
-        }
+        CdCommand { locations_provider }
     }
 
     pub fn cd(&self, print: bool) -> Result<()> {
@@ -30,15 +28,19 @@ impl<'a> CdCommand<'a> {
         let shell = get_shell()?;
         let config_path = self.locations_provider.get_base_config_path()?;
         let data_path = self.locations_provider.get_base_data_path()?;
-        let status = Command::new(&shell)
+
+        let _ = Command::new(&shell)
             .current_dir(&path)
             .env("PUFF_SUBSHELL", "1")
             .env("PUFF_CONFIG_PATH", &config_path)
             .env("PUFF_DATA_PATH", &data_path)
             .status()
-            .map_err(|e| anyhow!("Failed to spawn shell '{}': {}", shell, e))?;
+            .inspect_err(|e| {
+                println!("Error spawning subshell: {}", e);
+                println!("Path to the puff data directory: {}", path.display());
+            });
 
-        std::process::exit(status.code().unwrap_or(1));
+        Ok(())
     }
 }
 
