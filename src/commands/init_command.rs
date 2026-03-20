@@ -5,6 +5,7 @@ use crate::{
     project_init::existing::ExistingProjectInitializer,
 };
 use anyhow::{Result, bail};
+use dialoguer::{Input, Select};
 use std::{fs, path::Path};
 
 pub struct InitCommand<'a> {
@@ -67,61 +68,41 @@ impl<'a> InitCommand<'a> {
     }
 
     fn get_fresh_project_name(&self, cwd: &Path) -> Result<String> {
-        let mut proposed_name = String::new();
-        if let Some(osstr) = cwd.file_name() {
-            if let Some(osstr) = osstr.to_str() {
-                proposed_name = osstr.to_owned();
-            }
+        let mut input = Input::<String>::new().with_prompt("Project name");
+
+        if let Some(name) = cwd.file_name().and_then(|s| s.to_str()).filter(|s| !s.is_empty()) {
+            input = input.default(name.to_owned());
         }
 
-        if !proposed_name.is_empty() {
-            println!("Project name [{}]: ", proposed_name);
-        } else {
-            println!("Project name: ");
-        }
-
-        let mut user_name = String::new();
-        std::io::stdin().read_line(&mut user_name)?;
-        user_name = user_name.trim().to_owned();
-
-        if !user_name.is_empty() {
-            Ok(user_name)
-        } else if !proposed_name.is_empty() {
-            Ok(proposed_name)
-        } else {
-            println!("Name cannot be empty.");
-            self.get_fresh_project_name(cwd)
-        }
+        input
+            .validate_with(|s: &String| {
+                if s.trim().is_empty() {
+                    Err("Name cannot be empty")
+                } else {
+                    Ok(())
+                }
+            })
+            .interact_text()
+            .map_err(Into::into)
     }
 
     fn ask_about_unassociated(&self, unassociated: &'a [String]) -> Result<UserChoice<'a>> {
-        println!("0) Create a new project");
-        for (i, project) in unassociated.iter().enumerate() {
-            println!("{}) Associate with the project '{}'", i + 1, project);
+        let mut items: Vec<String> = vec!["Create a new project".to_owned()];
+        for project in unassociated {
+            items.push(format!("Associate with '{}'", project));
         }
 
-        println!("Select an option:");
-        print!("> ");
+        let selection = Select::new()
+            .with_prompt("Associate with an existing project or create new")
+            .items(&items)
+            .default(0)
+            .interact()?;
 
-        let mut choice = String::new();
-        std::io::stdin().read_line(&mut choice)?;
-
-        if choice == "0\n" {
-            return Ok(UserChoice::Fresh);
+        if selection == 0 {
+            Ok(UserChoice::Fresh)
+        } else {
+            Ok(UserChoice::Existing(&unassociated[selection - 1]))
         }
-
-        for (i, project) in unassociated.iter().enumerate() {
-            if choice == ((i + 1).to_string() + "\n") {
-                return Ok(UserChoice::Existing(project));
-            }
-        }
-
-        println!(
-            "Unrecognized option '{}'. Choose from the list below, or press Ctrl+C to cancel.",
-            choice.trim()
-        );
-
-        self.ask_about_unassociated(unassociated)
     }
 }
 
