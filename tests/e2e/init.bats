@@ -5,7 +5,7 @@ setup() { setup_puff_env; }
 teardown() { teardown_puff_env; }
 
 @test "init: creates config.json with project entry" {
-  run bash -c "echo 'myproject' | puff init"
+  run puff init --name myproject
   assert_success
   assert_file_exists "$PUFF_CONFIG_PATH/config.json"
   run grep -q '"myproject"' "$PUFF_CONFIG_PATH/config.json"
@@ -26,17 +26,18 @@ teardown() { teardown_puff_env; }
 
 @test "init: fails when directory is already initialized" {
   puff_init "myproject"
-  run bash -c "echo 'myproject' | puff init"
+  run puff init --name myproject
   assert_failure
 }
 
-@test "init: accepts directory name as default when empty input given" {
-  local named_dir
-  named_dir="$(mktemp -d)"
-  # Send empty line — puff should fall back to using the directory's basename
-  run bash -c "echo '' | PUFF_CONFIG_PATH='$PUFF_CONFIG_PATH' PUFF_DATA_PATH='$PUFF_DATA_PATH' puff init"
+@test "init: uses directory basename when no name given" {
+  # The current PROJECT_DIR has a basename; --name with that basename simulates the default
+  local basename
+  basename="$(basename "$PROJECT_DIR")"
+  run puff init --name "$basename"
   assert_success
-  rm -rf "$named_dir"
+  run grep -q "\"$basename\"" "$PUFF_CONFIG_PATH/config.json"
+  assert_success
 }
 
 @test "init: new machine - associates with unassociated project and recreates symlinks" {
@@ -56,8 +57,8 @@ teardown() { teardown_puff_env; }
   # Remove symlink (simulates fresh checkout, no local symlink yet)
   rm "$PROJECT_DIR/.env"
 
-  # Init: should detect unassociated project and ask to select; send "1" to pick it
-  run bash -c "echo '1' | PUFF_CONFIG_PATH='$new_config_home' PUFF_DATA_PATH='$new_data_home' puff init"
+  # Use --associate to pick the unassociated project
+  run env PUFF_CONFIG_PATH="$new_config_home" PUFF_DATA_PATH="$new_data_home" puff init --associate myproject
   assert_success
   assert_symlink "$PROJECT_DIR/.env"
   assert_file_content "$PROJECT_DIR/.env" "secret=abc"

@@ -2,10 +2,10 @@ use crate::{
     config::{
         app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
     },
+    io_utils::{prompt_input, prompt_select},
     project_init::existing::ExistingProjectInitializer,
 };
 use anyhow::{Result, bail};
-use dialoguer::{Input, Select};
 use std::{fs, path::Path};
 
 pub struct InitCommand<'a> {
@@ -15,17 +15,32 @@ pub struct InitCommand<'a> {
 }
 
 impl<'a> InitCommand<'a> {
-    pub fn init(&self, cwd: &Path) -> Result<()> {
+    pub fn init(
+        &self,
+        cwd: &Path,
+        name: Option<String>,
+        associate: Option<String>,
+    ) -> Result<()> {
         if self.projects_retriever.is_associated(cwd)? {
             bail!("This directory is already initialized with puff.");
         }
 
-        let unassociated = self.projects_retriever.get_unassociated_projects()?;
-        if !unassociated.is_empty() {
-            self.handle_with_unassociated(unassociated, cwd)?;
+        if let Some(project_name) = associate {
+            let unassociated = self.projects_retriever.get_unassociated_projects()?;
+            if !unassociated.contains(&project_name) {
+                bail!("Project '{}' is not an unassociated project.", project_name);
+            }
+            self.associate_project(&project_name, cwd)?;
+        } else if let Some(project_name) = name {
+            self.init_fresh_project(&project_name, cwd)?;
         } else {
-            let name = self.get_fresh_project_name(cwd)?;
-            self.init_fresh_project(&name, cwd)?;
+            let unassociated = self.projects_retriever.get_unassociated_projects()?;
+            if !unassociated.is_empty() {
+                self.handle_with_unassociated(unassociated, cwd)?;
+            } else {
+                let project_name = self.prompt_project_name(cwd)?;
+                self.init_fresh_project(&project_name, cwd)?;
+            }
         }
 
         println!("Project initialized.");
@@ -45,45 +60,35 @@ impl<'a> InitCommand<'a> {
         Ok(())
     }
 
+    fn associate_project(&self, name: &str, cwd: &Path) -> Result<()> {
+        let existing_initializer = ExistingProjectInitializer::new(self.app_config_manager);
+        existing_initializer.init_project(name, cwd, &self.locations_provider.get_managed_dir(name))
+    }
+
     fn handle_with_unassociated(&self, unassociated: Vec<String>, cwd: &Path) -> Result<()> {
         println!("Some projects in puff are not yet associated with a path on this machine.");
-        println!("Associate one with the current directory, or create a new project.");
         let choice = self.ask_about_unassociated(&unassociated)?;
         match choice {
             UserChoice::Fresh => {
-                let name = self.get_fresh_project_name(cwd)?;
+                let name = self.prompt_project_name(cwd)?;
                 self.init_fresh_project(&name, cwd)?;
             }
             UserChoice::Existing(name) => {
-                let existing_initializer = ExistingProjectInitializer::new(self.app_config_manager);
-                existing_initializer.init_project(
-                    name,
-                    cwd,
-                    &self.locations_provider.get_managed_dir(name),
-                )?
+                self.associate_project(name, cwd)?;
             }
         }
 
         Ok(())
     }
 
-    fn get_fresh_project_name(&self, cwd: &Path) -> Result<String> {
-        let mut input = Input::<String>::new().with_prompt("Project name");
+    fn prompt_project_name(&self, cwd: &Path) -> Result<String> {
+        let default = cwd
+            .file_name()
+            .and_then(|s| s.to_str())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_owned());
 
-        if let Some(name) = cwd.file_name().and_then(|s| s.to_str()).filter(|s| !s.is_empty()) {
-            input = input.default(name.to_owned());
-        }
-
-        input
-            .validate_with(|s: &String| {
-                if s.trim().is_empty() {
-                    Err("Name cannot be empty")
-                } else {
-                    Ok(())
-                }
-            })
-            .interact_text()
-            .map_err(Into::into)
+        prompt_input("Project name", default)
     }
 
     fn ask_about_unassociated(&self, unassociated: &'a [String]) -> Result<UserChoice<'a>> {
@@ -92,11 +97,10 @@ impl<'a> InitCommand<'a> {
             items.push(format!("Associate with '{}'", project));
         }
 
-        let selection = Select::new()
-            .with_prompt("Associate with an existing project or create new")
-            .items(&items)
-            .default(0)
-            .interact()?;
+        let selection = prompt_select(
+            "Associate with an existing project or create new",
+            &items,
+        )?;
 
         if selection == 0 {
             Ok(UserChoice::Fresh)

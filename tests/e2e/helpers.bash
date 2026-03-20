@@ -27,7 +27,7 @@ teardown_puff_env() {
 # Initializes current directory as a puff project with the given name.
 puff_init() {
   local name="${1:-myproject}"
-  echo "$name" | puff init
+  puff init --name "$name"
 }
 
 assert_success() {
