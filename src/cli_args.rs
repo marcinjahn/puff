@@ -1,6 +1,32 @@
 use clap::{Args, Parser, Subcommand};
+use clap_complete::engine::{ArgValueCompleter, CompletionCandidate};
 use clap_complete::Shell;
 use std::path::PathBuf;
+
+use crate::config::app_config::AppConfigManager;
+use crate::config::locations::LocationsProvider;
+
+fn complete_project_name(current: &std::ffi::OsStr) -> Vec<CompletionCandidate> {
+    let Some(current) = current.to_str() else {
+        return vec![];
+    };
+
+    let locations = LocationsProvider::default();
+    let Ok(config_manager) = AppConfigManager::new(locations.get_config_file_path()) else {
+        return vec![];
+    };
+    let Ok(config) = config_manager.get_config() else {
+        return vec![];
+    };
+
+    config
+        .projects
+        .into_iter()
+        .map(|p| p.name)
+        .filter(|name| name.starts_with(current))
+        .map(CompletionCandidate::new)
+        .collect()
+}
 
 #[derive(Parser)]
 #[command(
@@ -71,6 +97,7 @@ pub enum Command {
     /// Useful for git worktrees, jj workspaces, or any secondary working copy.
     Link {
         /// The project to link
+        #[arg(add = ArgValueCompleter::new(complete_project_name))]
         project_name: String,
     },
 
@@ -82,13 +109,14 @@ pub enum Command {
         print: bool,
     },
 
-    /// Generates shell completions for the given shell and prints them to stdout
+    /// Generates shell completions for the given shell and prints them to stdout.
+    /// Re-source on each shell startup for best results (completions are dynamic).
     #[command(after_help = "\
 Examples:
-  bash:       puff completions bash >> ~/.bashrc
-  zsh:        puff completions zsh > ~/.zfunc/_puff  (then add ~/.zfunc to $fpath)
-  fish:       puff completions fish > ~/.config/fish/completions/puff.fish
-  powershell: puff completions powershell >> $PROFILE")]
+  bash:       echo 'source <(puff completions bash)' >> ~/.bashrc
+  zsh:        echo 'source <(puff completions zsh)' >> ~/.zshrc
+  fish:       echo 'puff completions fish | source' >> ~/.config/fish/completions/puff.fish
+  powershell: echo 'puff completions powershell | Invoke-Expression' >> $PROFILE")]
     Completions {
         /// The shell to generate completions for
         shell: Shell,
@@ -115,6 +143,7 @@ pub enum ProjectSubcommand {
 #[derive(Args)]
 pub struct ProjectForgetSubcommand {
     /// Project to remove
+    #[arg(add = ArgValueCompleter::new(complete_project_name))]
     pub project_name: String, // TODO: Vec<PathBuf>
 
     /// Deletes the managed files from the filesystem

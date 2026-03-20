@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--version` flag to print the version number with commit hash
 - `status` command to print whether current directory is a part of puff-managed project and list
   managed files if it is
-- `completions` command to generate shell completions
+- `completions` command to generate shell completions (dynamic, with project name completion for
+  `link` and `project forget`)
 - support multiple files provided to `add` and `forget` commands
 - a `cd` command that spawns subshell at the puff's projects directory - user can backup the files
 - `link` command to create bring puff-managed files into other directories than the main project directory (useful for git

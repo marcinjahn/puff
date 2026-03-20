@@ -1,7 +1,7 @@
 use anyhow::Result;
 use app_init::AppInitializer;
 use clap::{CommandFactory, Parser};
-use clap_complete::generate;
+use clap_complete::CompleteEnv;
 use cli_args::{AppArgs, Command};
 use commands::{
     add_command::AddCommand, cd_command::CdCommand, file_forget_command::ForgetCommand,
@@ -11,7 +11,6 @@ use commands::{
 use config::{
     app_config::AppConfigManager, locations::LocationsProvider, projects::ProjectsRetriever,
 };
-use std::io;
 use std::{env, path::Path};
 
 mod app_init;
@@ -32,10 +31,14 @@ fn main() {
 }
 
 fn run() -> Result<()> {
+    CompleteEnv::with_factory(AppArgs::command).complete();
+
     let args = AppArgs::parse();
 
-    if let Command::Completions { shell } = args.command {
-        generate(shell, &mut AppArgs::command(), "puff", &mut io::stdout());
+    if let Command::Completions { shell } = &args.command {
+        // SAFETY: no other threads are running at this point
+        unsafe { env::set_var("COMPLETE", shell.to_string()) };
+        CompleteEnv::with_factory(AppArgs::command).complete();
         return Ok(());
     }
 
