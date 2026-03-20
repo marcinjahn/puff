@@ -5,7 +5,7 @@ use clap_complete::generate;
 use cli_args::{AppArgs, Command};
 use commands::{
     add_command::AddCommand, cd_command::CdCommand, file_forget_command::ForgetCommand,
-    init_command::InitCommand, list_command::ListCommand,
+    init_command::InitCommand, link_command::LinkCommand, list_command::ListCommand,
     project_forget_command::ProjectForgetCommand, status_command::StatusCommand,
 };
 use config::{
@@ -140,6 +140,12 @@ fn run() -> Result<()> {
                 )?;
             }
         },
+        Command::Link { project_name } => {
+            let cwd = env::current_dir()?;
+            let projects_retriever = ProjectsRetriever::new(app_config, &locations_provider);
+            let command = LinkCommand::new(&projects_retriever, &locations_provider);
+            command.link(&project_name, &cwd)?;
+        }
         // handled up above
         Command::Completions { .. } | Command::Cd { .. } => unreachable!(),
     }

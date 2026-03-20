@@ -67,6 +67,13 @@ pub enum Command {
         subcommand: ProjectSubcommand,
     },
 
+    /// Creates symlinks for a project's managed files in the current directory.
+    /// Useful for git worktrees, jj workspaces, or any secondary working copy.
+    Link {
+        /// The project to link
+        project_name: String,
+    },
+
     /// Opens a new shell in the puff data directory where managed files are stored.
     /// Use --print to just print the path instead.
     Cd {

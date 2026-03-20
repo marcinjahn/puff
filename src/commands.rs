@@ -2,6 +2,7 @@ pub mod add_command;
 pub mod cd_command;
 pub mod file_forget_command;
 pub mod init_command;
+pub mod link_command;
 pub mod list_command;
 pub mod project_forget_command;
 pub mod status_command;
