@@ -1,32 +1,9 @@
 use clap::{Args, Parser, Subcommand};
-use clap_complete::engine::{ArgValueCompleter, CompletionCandidate};
+use clap_complete::engine::ArgValueCompleter;
 use clap_complete::Shell;
 use std::path::PathBuf;
 
-use crate::config::app_config::AppConfigManager;
-use crate::config::locations::LocationsProvider;
-
-fn complete_project_name(current: &std::ffi::OsStr) -> Vec<CompletionCandidate> {
-    let Some(current) = current.to_str() else {
-        return vec![];
-    };
-
-    let locations = LocationsProvider::default();
-    let Ok(config_manager) = AppConfigManager::new(locations.get_config_file_path()) else {
-        return vec![];
-    };
-    let Ok(config) = config_manager.get_config() else {
-        return vec![];
-    };
-
-    config
-        .projects
-        .into_iter()
-        .map(|p| p.name)
-        .filter(|name| name.starts_with(current))
-        .map(CompletionCandidate::new)
-        .collect()
-}
+use crate::completions::{complete_project_name, complete_unassociated_project_name};
 
 #[derive(Parser)]
 #[command(
@@ -55,7 +32,7 @@ pub struct AppArgs {
 #[derive(Subcommand)]
 pub enum Command {
     /// Initializes the project.
-    Init,
+    Init(InitSubcommand),
 
     /// Adds a new file to be tracked by puff in this project.
     /// If the file does not exist, it will be created.
@@ -132,6 +109,17 @@ pub struct ListSubcommand {
     /// Retrieve only the associated projects
     #[arg(short = 'a')]
     pub only_associated: bool,
+}
+
+#[derive(Args)]
+pub struct InitSubcommand {
+    /// Project name (skips the interactive prompt)
+    #[arg(short = 'n', long = "name")]
+    pub name: Option<String>,
+
+    /// Associate with an existing unassociated project (skips the interactive prompt)
+    #[arg(short = 'a', long = "associate", conflicts_with = "name", add = ArgValueCompleter::new(complete_unassociated_project_name))]
+    pub associate: Option<String>,
 }
 
 #[derive(Subcommand)]

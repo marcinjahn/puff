@@ -16,6 +16,7 @@ use std::{env, path::Path};
 mod app_init;
 mod cli_args;
 mod commands;
+mod completions;
 mod config;
 mod fs_utils;
 mod git_ignore;
@@ -82,7 +83,7 @@ fn run() -> Result<()> {
     let app_config = app_config_manager.get_config()?;
 
     match args.command {
-        Command::Init => {
+        Command::Init(options) => {
             let retriever = ProjectsRetriever::new(app_config, &locations_provider);
             let cwd = env::current_dir()?;
 
@@ -91,7 +92,7 @@ fn run() -> Result<()> {
                 app_config_manager: &app_config_manager,
                 locations_provider: &locations_provider,
             };
-            command.init(&cwd)?;
+            command.init(&cwd, options.name, options.associate)?;
         }
         Command::Add { files, git_ignore } => {
             let cwd = env::current_dir()?;
