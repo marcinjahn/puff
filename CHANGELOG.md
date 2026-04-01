@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Support for managing entire directories as first-class units — `puff add config/` moves the
+  directory to puff's data store and replaces it with a single directory symlink
+- `--dir` flag on `add` command to create a fresh managed directory that doesn't exist yet
+- Auto-detection of files vs directories when running `puff add` on existing paths
+- Auto-absorb: `puff add config/` silently merges individually managed files already inside
+  `config/` into the directory
+- `puff forget` and `puff forget --delete` work on managed directories
+- Guards that prevent adding/forgetting individual files inside a managed directory
+- `puff init`, `puff link`, and `puff project forget` handle managed directories correctly
+  (directory symlinks, backup of conflicting real directories, recursive restore)
 - Support for managing files located in subdirectories of a project
 - `--version` flag to print the version number with commit hash
 - `status` command to print whether current directory is a part of puff-managed project and list
@@ -24,10 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `puff status` now shows "Managed items:" (was "Managed files:") with directories displayed
+  with a trailing `/`
+- `puff link` now reports "item(s)" instead of "file(s)"
 - Renamed `rm` command to `forget`
 - Renamed `project rm` command to `project forget`
 - Updated all dependencies; migrated to Rust 2024 edition
 - Improved error messages
+- Fixed `puff add` printing a false success message when a file exists in both the project
+  directory and puff's registry (conflict now properly errors out)
 - projects are now stored in `XDG_DATA_HOME/puff/projects` instead of `XDG_CONFIG_HOME/puff/configs`
 
 ### Removed

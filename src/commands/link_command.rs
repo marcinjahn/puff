@@ -46,7 +46,7 @@ impl<'a> LinkCommand<'a> {
             bail!("You're already in the project's main directory. Nothing to link.");
         }
 
-        if associated.info.files.is_empty() {
+        if associated.info.items.is_empty() {
             println!("Project '{}' has no managed files.", project_name);
             return Ok(());
         }
@@ -54,9 +54,9 @@ impl<'a> LinkCommand<'a> {
         let managed_dir = self.locations_provider.get_managed_dir(project_name);
         create_symlinks_for_managed_files(cwd, &managed_dir)?;
 
-        let count = associated.info.files.len();
+        let count = associated.info.items.len();
         println!(
-            "Linked {} file{} from project '{}' into current directory.",
+            "Linked {} item{} from project '{}' into current directory.",
             count,
             if count == 1 { "" } else { "s" },
             project_name

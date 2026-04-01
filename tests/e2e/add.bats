@@ -90,6 +90,31 @@ teardown() { teardown_puff_env; }
   assert_file_exists "$PUFF_DATA_PATH/projects/myproject/.env.local"
 }
 
+@test "add: conflict when file exists in both places does not print success" {
+  puff_init "myproject"
+  echo "local=1" >.env
+  # Simulate managed file already existing with different content
+  echo "managed=2" >"$PUFF_DATA_PATH/projects/myproject/.env"
+  run puff add .env
+  assert_failure
+  assert_output_contains "Conflict"
+  assert_output_not_contains "Added"
+  # .gitignore should NOT be created on conflict
+  assert_not_exists ".gitignore"
+}
+
+@test "add: already managed file does not print Added" {
+  puff_init "myproject"
+  echo "secret=123" >.env
+  puff add .env
+  run puff add --git-ignore .env
+  assert_success
+  assert_output_contains "already managed"
+  assert_output_not_contains "Added"
+  # .gitignore should NOT be touched for already-managed file
+  assert_not_exists ".gitignore"
+}
+
 @test "add: partial failure exits with code 1 and processes remaining files" {
   puff_init "myproject"
   echo "a=1" >.env

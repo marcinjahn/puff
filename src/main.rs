@@ -21,6 +21,7 @@ mod config;
 mod fs_utils;
 mod git_ignore;
 mod io_utils;
+mod managed_dirs;
 mod migration;
 mod project_init;
 
@@ -94,12 +95,12 @@ fn run() -> Result<()> {
             };
             command.init(&cwd, options.name, options.associate)?;
         }
-        Command::Add { files, git_ignore } => {
+        Command::Add { files, git_ignore, dir } => {
             let cwd = env::current_dir()?;
             let command = AddCommand::new(&locations_provider);
             let mut had_error = false;
             for file in files {
-                if let Err(e) = command.add_file(file, &cwd, git_ignore) {
+                if let Err(e) = command.add_file(file, &cwd, git_ignore, dir) {
                     eprintln!("Error: {e}");
                     had_error = true;
                 }

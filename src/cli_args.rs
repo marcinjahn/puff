@@ -34,16 +34,20 @@ pub enum Command {
     /// Initializes the project.
     Init(InitSubcommand),
 
-    /// Adds a new file to be tracked by puff in this project.
-    /// If the file does not exist, it will be created.
+    /// Adds a new file or directory to be tracked by puff in this project.
+    /// If the path does not exist, it will be created (as a file by default, or as a directory with --dir).
     Add {
-        /// Files to be added
+        /// Paths to be added
         #[arg(num_args = 1..)]
         files: Vec<PathBuf>,
 
-        /// Adds the new file to .gitignore (.gitignre will be created if it doesn't exist)
+        /// Adds the new path to .gitignore (.gitignore will be created if it doesn't exist)
         #[arg(short = 'g', long = "git-ignore")]
         git_ignore: bool,
+
+        /// Treat non-existing paths as directories (existing paths are auto-detected)
+        #[arg(long = "dir")]
+        dir: bool,
     },
 
     /// Removes a file from puff. The file will stay in

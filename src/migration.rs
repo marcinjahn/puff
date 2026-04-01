@@ -1,4 +1,5 @@
 use crate::config::{app_config::AppConfigManager, locations::LocationsProvider};
+use crate::fs_utils::copy_dir_recursive;
 use anyhow::{Result, bail};
 use std::fs;
 use std::path::Path;
@@ -40,21 +41,6 @@ pub fn migrate_projects_path_if_needed(locations_provider: &LocationsProvider) -
     );
 
     Ok(true)
-}
-
-fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
-    fs::create_dir_all(dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let src_path = entry.path();
-        let dst_path = dst.join(entry.file_name());
-        if src_path.is_dir() {
-            copy_dir_recursive(&src_path, &dst_path)?;
-        } else {
-            fs::copy(&src_path, &dst_path)?;
-        }
-    }
-    Ok(())
 }
 
 /// Best-effort: walk each associated project's user directory and repoint
