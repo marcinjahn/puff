@@ -30,6 +30,9 @@ impl<'a> AddCommand<'a> {
         if !user_file.is_absolute() {
             user_file = current_dir.join(user_file);
         }
+        // Normalize the path (strip trailing slashes, redundant `.` segments, etc.)
+        // so that downstream symlink creation doesn't fail on e.g. "mydir/".
+        user_file = user_file.components().collect();
 
         let is_dir = if user_file.exists() {
             if user_file.is_dir() {

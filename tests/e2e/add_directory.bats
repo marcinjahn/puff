@@ -81,6 +81,16 @@ teardown() { teardown_puff_env; }
   assert_output_contains "already managed as part of directory"
 }
 
+@test "add dir: trailing slash on path works" {
+  puff_init "myproject"
+  mkdir -p config
+  echo "DB_URL=postgres" >config/db.env
+  run puff add config/
+  assert_success
+  assert_symlink "$PROJECT_DIR/config"
+  assert_file_content "$PROJECT_DIR/config/db.env" "DB_URL=postgres"
+}
+
 @test "add dir: nested subdirectories are preserved" {
   puff_init "myproject"
   mkdir -p config/sub/deep
