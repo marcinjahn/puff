@@ -33,12 +33,12 @@ impl<'a> StatusCommand<'a> {
                 };
 
                 println!("Project: {}", details.info().name);
-                println!("Managed files:");
-                if details.info().files.is_empty() {
+                println!("Managed items:");
+                if details.info().items.is_empty() {
                     println!("  (none)");
                 } else {
-                    for file in &details.info().files {
-                        println!("  {}", file.display());
+                    for item in &details.info().items {
+                        println!("  {}", item.display_name());
                     }
                 }
             }

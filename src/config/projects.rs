@@ -1,4 +1,5 @@
 use super::{app_config::AppConfig, locations::LocationsProvider};
+use crate::managed_dirs;
 use anyhow::{Result, bail};
 use std::{
     fs,
@@ -34,11 +35,11 @@ impl<'a> ProjectsRetriever<'a> {
             return Ok(None);
         }
 
-        let files = collect_files_recursively(&managed_dir, &managed_dir)?;
+        let items = collect_items_recursively(&managed_dir, &managed_dir)?;
         let info = ProjectInfo {
             name: project_name.to_owned(),
             managed_dir,
-            files,
+            items,
         };
 
         Ok(Some(match project_config {
@@ -104,7 +105,7 @@ impl<'a> ProjectsRetriever<'a> {
 pub struct ProjectInfo {
     pub name: String,
     pub managed_dir: PathBuf,
-    pub files: Vec<PathBuf>,
+    pub items: Vec<ManagedItem>,
 }
 
 #[non_exhaustive]
@@ -133,21 +134,61 @@ impl ProjectDetails {
     }
 }
 
-/// Collects all files under `dir`, returning their paths relative to `base`.
-fn collect_files_recursively(base: &Path, dir: &Path) -> Result<Vec<PathBuf>> {
-    let mut files = vec![];
-    let mut dirs = vec![dir.to_owned()];
-    while let Some(current) = dirs.pop() {
+/// A managed item: either a single file or an entire directory.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ManagedItem {
+    File(PathBuf),
+    Directory(PathBuf),
+}
+
+impl ManagedItem {
+    pub fn path(&self) -> &Path {
+        match self {
+            ManagedItem::File(p) | ManagedItem::Directory(p) => p,
+        }
+    }
+
+    pub fn is_directory(&self) -> bool {
+        matches!(self, ManagedItem::Directory(_))
+    }
+
+    pub fn display_name(&self) -> String {
+        match self {
+            ManagedItem::File(p) => p.display().to_string(),
+            ManagedItem::Directory(p) => format!("{}/", p.display()),
+        }
+    }
+}
+
+/// Collects all managed items under `dir`, returning their paths relative to `base`.
+/// Managed directories are yielded as single entries instead of being recursed into.
+fn collect_items_recursively(base: &Path, dir: &Path) -> Result<Vec<ManagedItem>> {
+    let managed_dir_set = managed_dirs::read_managed_dirs_set(base)?;
+    let managed_dirs_filename = managed_dirs::managed_dirs_filename();
+
+    let mut items = vec![];
+    let mut stack = vec![dir.to_owned()];
+    while let Some(current) = stack.pop() {
         for entry in fs::read_dir(&current)? {
             let path = entry?.path();
+            let relative = path.strip_prefix(base)?.to_owned();
+
+            if path.is_file() && path.file_name().map(|n| n == managed_dirs_filename).unwrap_or(false) && path.parent() == Some(base) {
+                continue;
+            }
+
             if path.is_dir() {
-                dirs.push(path);
+                if managed_dir_set.contains(&relative) {
+                    items.push(ManagedItem::Directory(relative));
+                } else {
+                    stack.push(path);
+                }
             } else {
-                files.push(path.strip_prefix(base)?.to_owned());
+                items.push(ManagedItem::File(relative));
             }
         }
     }
-    Ok(files)
+    Ok(items)
 }
 
 #[cfg(test)]

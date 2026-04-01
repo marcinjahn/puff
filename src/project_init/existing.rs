@@ -1,6 +1,7 @@
 use crate::{
     config::app_config::AppConfigManager,
-    fs_utils::{backup_file, symlink_file},
+    fs_utils::{backup_dir, backup_file, symlink_dir, symlink_file},
+    managed_dirs,
 };
 use anyhow::{Result, anyhow, bail};
 use std::{fs, path::Path};
@@ -38,14 +39,39 @@ pub fn create_symlinks_for_managed_files(target_dir: &Path, managed_dir: &Path) 
 }
 
 fn walk_managed_dir(target_dir: &Path, managed_dir: &Path, current_dir: &Path) -> Result<()> {
+    let managed_dir_set = managed_dirs::read_managed_dirs_set(managed_dir)?;
+    let managed_dirs_filename = managed_dirs::managed_dirs_filename();
+
+    walk_managed_dir_inner(target_dir, managed_dir, current_dir, &managed_dir_set, managed_dirs_filename)
+}
+
+fn walk_managed_dir_inner(
+    target_dir: &Path,
+    managed_dir: &Path,
+    current_dir: &Path,
+    managed_dir_set: &std::collections::HashSet<std::path::PathBuf>,
+    managed_dirs_filename: &str,
+) -> Result<()> {
     for entry in current_dir.read_dir()? {
         match entry {
             Ok(entry) => {
                 let path = entry.path();
+                let relative_path = path.strip_prefix(managed_dir)?;
+
+                if path.is_file()
+                    && path.file_name().map(|n| n == managed_dirs_filename).unwrap_or(false)
+                    && path.parent() == Some(managed_dir)
+                {
+                    continue;
+                }
+
                 if path.is_dir() {
-                    walk_managed_dir(target_dir, managed_dir, &path)?;
+                    if managed_dir_set.contains(&relative_path.to_path_buf()) {
+                        symlink_one_dir(&path, target_dir, relative_path)?;
+                    } else {
+                        walk_managed_dir_inner(target_dir, managed_dir, &path, managed_dir_set, managed_dirs_filename)?;
+                    }
                 } else {
-                    let relative_path = path.strip_prefix(managed_dir)?;
                     symlink_one_file(&path, target_dir, relative_path)?;
                 }
             }
@@ -56,6 +82,43 @@ fn walk_managed_dir(target_dir: &Path, managed_dir: &Path, current_dir: &Path) -
             }
         }
     }
+    Ok(())
+}
+
+fn symlink_one_dir(managed_path: &Path, target_dir: &Path, relative_path: &Path) -> Result<()> {
+    let dir_in_target = target_dir.join(relative_path);
+    fs::create_dir_all(dir_in_target.parent().unwrap())?;
+
+    if let Ok(target) = fs::read_link(&dir_in_target) {
+        if target == managed_path {
+            return Ok(());
+        }
+    }
+
+    if dir_in_target.exists() || dir_in_target.symlink_metadata().is_ok() {
+        if dir_in_target.is_dir() && !dir_in_target.is_symlink() {
+            let backup = backup_dir(&dir_in_target)?;
+            fs::remove_dir_all(&dir_in_target)?;
+            println!(
+                "Conflict: {:?} exists as a real directory. \
+                A backup was created at {}. \
+                It now points to the puff-managed version.",
+                relative_path.file_name().unwrap_or(relative_path.as_os_str()),
+                backup.unwrap(),
+            );
+        } else {
+            let backup = backup_file(&dir_in_target)?;
+            fs::remove_file(&dir_in_target)?;
+            println!(
+                "Conflict: {:?} exists in both the project directory and puff's registry. \
+                A backup of the original was created at {}.",
+                relative_path.file_name().unwrap_or(relative_path.as_os_str()),
+                backup.unwrap(),
+            );
+        }
+    }
+
+    symlink_dir(managed_path, &dir_in_target)?;
     Ok(())
 }
 

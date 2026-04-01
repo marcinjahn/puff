@@ -4,9 +4,9 @@ use std::fs;
 use crate::{
     config::{
         app_config::AppConfigManager,
-        projects::{AssociatedProject, ProjectDetails, ProjectsRetriever},
+        projects::{AssociatedProject, ManagedItem, ProjectDetails, ProjectsRetriever},
     },
-    fs_utils::{get_backup_path, is_symlink},
+    fs_utils::{copy_dir_recursive, get_backup_path, is_symlink, remove_dir_symlink},
     io_utils::confirm,
 };
 
@@ -60,7 +60,7 @@ impl<'a> ProjectForgetCommand<'a> {
         self.remove_managed_dir(&project_details)?;
         self.update_config(&project_details)?;
 
-        if delete_files || project_details.info().files.is_empty() {
+        if delete_files || project_details.info().items.is_empty() {
             println!("Project '{name}' removed.");
         } else {
             println!(
@@ -76,25 +76,46 @@ impl<'a> ProjectForgetCommand<'a> {
     }
 
     fn remove_symlinks(&self, associated: &AssociatedProject) -> Result<()> {
-        for file_name in &associated.info.files {
-            let path = associated.user_dir.join(file_name);
+        for item in &associated.info.items {
+            let path = associated.user_dir.join(item.path());
+            if path.symlink_metadata().is_err() {
+                continue;
+            }
             if is_symlink(&path)? {
-                fs::remove_file(path)?;
+                if item.is_directory() {
+                    remove_dir_symlink(&path)?;
+                } else {
+                    fs::remove_file(&path)?;
+                }
             }
         }
         Ok(())
     }
 
     fn replace_symlinks(&self, associated: &AssociatedProject) -> Result<()> {
-        for file in &associated.info.files {
-            let mut target_path = associated.user_dir.join(file);
+        for item in &associated.info.items {
+            let mut target_path = associated.user_dir.join(item.path());
             fs::create_dir_all(target_path.parent().unwrap())?;
-            if !is_symlink(&target_path)? {
-                target_path = get_backup_path(&target_path)?;
-            } else {
-                fs::remove_file(&target_path)?;
+
+            match item {
+                ManagedItem::File(_) => {
+                    if !is_symlink(&target_path)? {
+                        target_path = get_backup_path(&target_path)?;
+                    } else {
+                        fs::remove_file(&target_path)?;
+                    }
+                    fs::copy(associated.info.managed_dir.join(item.path()), target_path)?;
+                }
+                ManagedItem::Directory(_) => {
+                    if is_symlink(&target_path)? {
+                        remove_dir_symlink(&target_path)?;
+                    }
+                    copy_dir_recursive(
+                        &associated.info.managed_dir.join(item.path()),
+                        &target_path,
+                    )?;
+                }
             }
-            fs::copy(associated.info.managed_dir.join(file), target_path)?;
         }
         Ok(())
     }

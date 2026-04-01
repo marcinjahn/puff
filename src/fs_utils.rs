@@ -45,6 +45,43 @@ pub fn symlink_file(original: impl AsRef<Path>, link: impl AsRef<Path>) -> Resul
     Ok(())
 }
 
+pub fn symlink_dir(original: impl AsRef<Path>, link: impl AsRef<Path>) -> Result<()> {
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(original, link)?;
+    #[cfg(windows)]
+    std::os::windows::fs::symlink_dir(original, link)?;
+    Ok(())
+}
+
+pub fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+        if src_path.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn remove_dir_symlink(path: &Path) -> Result<()> {
+    #[cfg(unix)]
+    fs::remove_file(path)?;
+    #[cfg(windows)]
+    fs::remove_dir(path)?;
+    Ok(())
+}
+
+pub fn backup_dir(dir_path: &Path) -> Result<Option<String>> {
+    let backup_path = get_backup_path(dir_path)?;
+    copy_dir_recursive(dir_path, &backup_path)?;
+    Ok(Some(backup_path.to_str().unwrap().to_string()))
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
