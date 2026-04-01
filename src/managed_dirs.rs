@@ -48,12 +48,6 @@ pub fn is_inside_managed_dir(managed_dir: &Path, relative_path: &Path) -> Result
     Ok(find_managed_ancestor(&dirs, relative_path))
 }
 
-/// Returns true if the given relative path is itself listed as a managed directory.
-pub fn is_managed_dir(managed_dir: &Path, relative_path: &Path) -> Result<bool> {
-    let dirs = read_managed_dirs_set(managed_dir)?;
-    Ok(dirs.contains(&relative_path.to_path_buf()))
-}
-
 pub enum PathClassification {
     IsManaged,
     InsideManaged(PathBuf),
@@ -157,10 +151,11 @@ mod tests {
     }
 
     #[test]
-    fn is_managed_dir_works() {
+    fn classify_path_works() {
         let dir = tempfile::tempdir().unwrap();
         add_managed_dir(dir.path(), Path::new("config")).unwrap();
-        assert!(is_managed_dir(dir.path(), Path::new("config")).unwrap());
-        assert!(!is_managed_dir(dir.path(), Path::new("other")).unwrap());
+        assert!(matches!(classify_path(dir.path(), Path::new("config")).unwrap(), PathClassification::IsManaged));
+        assert!(matches!(classify_path(dir.path(), Path::new("config/db.env")).unwrap(), PathClassification::InsideManaged(_)));
+        assert!(matches!(classify_path(dir.path(), Path::new("other")).unwrap(), PathClassification::Unmanaged));
     }
 }

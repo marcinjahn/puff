@@ -236,10 +236,12 @@ impl<'a> AddCommand<'a> {
 
         fs::create_dir_all(managed_file.parent().unwrap())?;
 
-        let mut message = String::from("");
         if user_file.exists() && managed_file.exists() {
-            AddCommand::handle_two_files(&user_file, &managed_file);
-        } else if !user_file.exists() && managed_file.exists() {
+            return AddCommand::handle_two_files(&user_file, &managed_file);
+        }
+
+        let mut message = String::from("");
+        if !user_file.exists() && managed_file.exists() {
             AddCommand::handle_only_managed_exists(&managed_file, &user_file)?;
             message = "It was symlinked to an existing file managed by puff.".to_string();
         } else if user_file.exists() {
@@ -271,26 +273,27 @@ impl<'a> AddCommand<'a> {
         Ok(())
     }
 
-    fn handle_two_files(user_file: &Path, managed_file: &Path) {
+    fn handle_two_files(user_file: &Path, managed_file: &Path) -> Result<()> {
         if let Ok(symlink_path) = fs::read_link(user_file)
             && symlink_path == managed_file
         {
             println!("{:?} is already managed by puff. Nothing to do.", user_file);
+            return Ok(());
         }
 
         let metadata = fs::metadata(user_file);
         if let Ok(metadata) = metadata {
             if metadata.file_type().is_dir() {
-                println!("{:?} is a directory, not a file. Aborting.", user_file);
+                bail!("{:?} is a directory, not a file.", user_file);
             } else {
-                println!(
+                bail!(
                     "Conflict: {:?} exists in both the project directory and puff's registry. \
                     Rename the local file and re-run the command to resolve the conflict.",
                     user_file
                 );
             }
         } else {
-            println!("Could not access {:?}. Aborting.", user_file);
+            bail!("Could not access {:?}.", user_file);
         }
     }
 
