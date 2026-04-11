@@ -30,6 +30,14 @@ impl<'a> AddCommand<'a> {
         if !user_file.is_absolute() {
             user_file = current_dir.join(user_file);
         }
+
+        // Detect trailing separator before normalization strips it — a trailing
+        // slash is a signal that the user intends a directory.
+        let had_trailing_sep = {
+            let raw = user_file.as_os_str().to_string_lossy();
+            raw.ends_with('/') || raw.ends_with(std::path::MAIN_SEPARATOR)
+        };
+
         // Normalize the path (strip trailing slashes, redundant `.` segments, etc.)
         // so that downstream symlink creation doesn't fail on e.g. "mydir/".
         user_file = user_file.components().collect();
@@ -47,7 +55,13 @@ impl<'a> AddCommand<'a> {
                 false
             }
         } else {
-            force_dir
+            if had_trailing_sep && !force_dir {
+                bail!(
+                    "Directory '{}' does not exist. Use --dir to create a new managed directory.",
+                    user_file.display()
+                );
+            }
+            force_dir || had_trailing_sep
         };
 
         if is_dir {
