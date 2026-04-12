@@ -52,5 +52,6 @@ test-app: test-unit test-e2e
 test: test-app test-scripts
 
 # Trigger a new release (major, minor, or patch)
-release bump:
-    gh workflow run release.yml -f bump={{bump}}
+[arg('semver-part', pattern='major|minor|patch')]
+release semver-part:
+    gh workflow run release.yml -f semver-part={{semver-part}}

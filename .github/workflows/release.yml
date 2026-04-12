@@ -3,7 +3,7 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      bump:
+      semver-part:
         description: "Version bump type"
         required: true
         type: choice
@@ -42,7 +42,7 @@ jobs:
       - name: Calculate new version
         id: version
         run: |
-          output=$(./scripts/calculate-version.sh "${{ inputs.bump }}" Cargo.toml)
+          output=$(./scripts/calculate-version.sh "${{ inputs.semver-part }}" Cargo.toml)
           version=$(echo "$output" | sed -n '1p')
           next_dev=$(echo "$output" | sed -n '2p')
 
