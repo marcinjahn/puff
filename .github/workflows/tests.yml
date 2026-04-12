@@ -17,6 +17,9 @@ jobs:
       - name: Run clippy
         run: just lint
 
+  # Tests run on one architecture per OS. Additional architectures are released
+  # (see github-release.yml) but don't need separate test runs — OS-level behavior
+  # (filesystem, symlinks, paths) is where bugs hide, not in CPU architecture differences.
   unit-tests:
     strategy:
       fail-fast: false
