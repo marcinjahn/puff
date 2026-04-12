@@ -133,8 +133,6 @@ unassociated configs.
 brew install marcinjahn/tap/puff
 ```
 
-This builds puff from source and installs shell completions automatically.
-
 ### WinGet (Windows, recommended)
 
 ```powershell
