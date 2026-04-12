@@ -143,6 +143,18 @@ cargo install puff
 
 This builds puff from source and places the binary in `~/.cargo/bin/`.
 
+### cargo-binstall
+
+If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)
+installed, you can install a pre-built binary directly:
+
+```sh
+cargo binstall puff
+```
+
+This downloads a pre-built binary from GitHub Releases instead of compiling from
+source.
+
 ### GitHub Releases
 
 Pre-built binaries are available on the
