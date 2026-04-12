@@ -7,6 +7,16 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: taiki-e/install-action@just
+      - name: Check formatting
+        run: just format-check
+      - name: Run clippy
+        run: just lint
+
   unit-tests:
     strategy:
       fail-fast: false
@@ -15,10 +25,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
-      - name: Build
-        run: cargo build --verbose
+      - uses: taiki-e/install-action@just
       - name: Run unit tests
-        run: cargo test --verbose
+        run: just test-unit
 
   e2e-tests:
     strategy:
@@ -31,6 +40,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v6
+      - uses: taiki-e/install-action@just
       - name: Install bats (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -44,9 +54,20 @@ jobs:
         run: |
           git clone https://github.com/bats-core/bats-core.git "$HOME/bats-core" --depth=1
           echo "$HOME/bats-core/bin" >> "$GITHUB_PATH"
-      - name: Build binary
-        run: cargo build --release
       - name: Run e2e tests
+        run: just test-e2e
+
+  script-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+      - uses: taiki-e/install-action@just
+      - name: Install bats
         run: |
-          export PATH="$PWD/target/release:$PATH"
-          bats tests/e2e/ --print-output-on-failure
+          git clone https://github.com/bats-core/bats-core.git /tmp/bats-core --depth=1
+          sudo /tmp/bats-core/install.sh /usr/local
+      - name: Run script tests
+        run: just test-scripts
