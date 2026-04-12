@@ -164,9 +164,16 @@ and Windows.
 Download the archive for your platform, extract it, and place the `puff` binary
 somewhere in your `$PATH` (e.g. `~/.local/bin` on Linux).
 
-**macOS note:** The first time you run a downloaded binary, macOS may block it
-with a "developer cannot be verified" warning. To allow it: open Finder at the
-binary's location, right-click the binary, select _Open_, and confirm.
+**macOS note:** If you download a binary directly, macOS may block it with a
+"developer cannot be verified" warning. To resolve it, run:
+
+```sh
+xattr -d com.apple.quarantine /path/to/puff
+```
+
+Alternatively, open Finder at the binary's location, right-click the binary,
+select _Open_, and confirm. This issue does not affect Homebrew or
+cargo-based installations.
 
 ### Building from Source
 
