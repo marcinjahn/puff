@@ -53,6 +53,7 @@ jobs:
           zip: all
           tar: none
           archive: $bin-$tag-$target
+          checksum: sha256
           ref: refs/tags/${{ inputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
