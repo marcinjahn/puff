@@ -30,6 +30,13 @@ directory, creates symlinks so your projects still find them where they expect,
 and gives you commands to re-link everything on a new machine or in a new
 worktree.
 
+Existing tools solve adjacent problems — dotfile managers (chezmoi, GNU Stow)
+target personal configs in `$HOME`, secret managers (Doppler, Vault) require
+infrastructure, and in-repo encryption (git-crypt, SOPS) keeps secrets in version
+control. Puff is different: it's project-scoped, works with any file or
+directory, requires zero infrastructure, and has first-class git worktree
+support.
+
 ## How It Works
 
 **Your project directory:**
