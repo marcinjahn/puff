@@ -135,6 +135,12 @@ brew install marcinjahn/tap/puff
 
 This builds puff from source and installs shell completions automatically.
 
+### WinGet (Windows)
+
+```powershell
+winget install marcinjahn.puff
+```
+
 ### Cargo
 
 ```sh

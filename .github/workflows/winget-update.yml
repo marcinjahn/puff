@@ -1,0 +1,26 @@
+name: Update WinGet Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish (e.g. v0.2.0)"
+        required: true
+  workflow_call:
+    inputs:
+      tag:
+        description: "Existing tag to publish (e.g. v0.2.0)"
+        required: true
+        type: string
+
+jobs:
+  update-winget:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish to WinGet
+        uses: vedantmgoyal9/winget-releaser@7bd472be23763def6e16bd06cc8b1cdfab0e2fd5
+        with:
+          identifier: marcinjahn.puff
+          installers-regex: '-pc-windows-msvc\.zip$'
+          release-tag: ${{ inputs.tag }}
+          token: ${{ secrets.WINGET_TOKEN }}
