@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-04-12
+
 ### Added
 
 - Support for managing entire directories as first-class units — `puff add config/` moves the
@@ -84,7 +86,8 @@ Initial release with core functionality:
 - `puff rm` — stop managing a file
 - `puff project rm` — stop managing a project
 
-[unreleased]: https://github.com/marcinjahn/puff/compare/v0.1.7...HEAD
+[unreleased]: https://github.com/marcinjahn/puff/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/marcinjahn/puff/compare/v0.1.7...v1.0.0
 [0.1.7]: https://github.com/marcinjahn/puff/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/marcinjahn/puff/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/marcinjahn/puff/compare/v0.1.4...v0.1.5
