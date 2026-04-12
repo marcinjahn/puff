@@ -95,7 +95,11 @@ fn run() -> Result<()> {
             };
             command.init(&cwd, options.name, options.associate)?;
         }
-        Command::Add { files, git_ignore, dir } => {
+        Command::Add {
+            files,
+            git_ignore,
+            dir,
+        } => {
             let cwd = env::current_dir()?;
             let command = AddCommand::new(&locations_provider);
             let mut had_error = false;

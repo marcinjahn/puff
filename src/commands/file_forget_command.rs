@@ -33,14 +33,19 @@ impl<'a> ForgetCommand<'a> {
             .parent()
             .ok_or_else(|| anyhow!("Could not retrieve user's project directory"))?;
 
-        let (project_name, project_root) =
-            self.locations_provider.find_project_for_path(parent)?;
+        let (project_name, project_root) = self.locations_provider.find_project_for_path(parent)?;
         let managed_dir = self.locations_provider.get_managed_dir(&project_name);
         let relative_path = user_file.strip_prefix(&project_root)?;
 
         match managed_dirs::classify_path(&managed_dir, relative_path)? {
             PathClassification::IsManaged => {
-                return self.forget_directory(&user_file, &project_name, &managed_dir, relative_path, delete_file);
+                return self.forget_directory(
+                    &user_file,
+                    &project_name,
+                    &managed_dir,
+                    relative_path,
+                    delete_file,
+                );
             }
             PathClassification::InsideManaged(parent_managed) => {
                 bail!(
@@ -101,10 +106,8 @@ impl<'a> ForgetCommand<'a> {
         }
 
         // Remove the symlink
-        if user_path.exists() || user_path.symlink_metadata().is_ok() {
-            if is_symlink(user_path)? {
-                remove_dir_symlink(user_path)?;
-            }
+        if (user_path.exists() || user_path.symlink_metadata().is_ok()) && is_symlink(user_path)? {
+            remove_dir_symlink(user_path)?;
         }
 
         if !delete_file {

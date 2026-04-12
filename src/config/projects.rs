@@ -173,7 +173,13 @@ fn collect_items_recursively(base: &Path, dir: &Path) -> Result<Vec<ManagedItem>
             let path = entry?.path();
             let relative = path.strip_prefix(base)?.to_owned();
 
-            if path.is_file() && path.file_name().map(|n| n == managed_dirs_filename).unwrap_or(false) && path.parent() == Some(base) {
+            if path.is_file()
+                && path
+                    .file_name()
+                    .map(|n| n == managed_dirs_filename)
+                    .unwrap_or(false)
+                && path.parent() == Some(base)
+            {
                 continue;
             }
 

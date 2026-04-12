@@ -29,7 +29,6 @@ impl<'a> ExistingProjectInitializer<'a> {
 
         Ok(())
     }
-
 }
 
 /// Creates symlinks in `target_dir` for all files in `managed_dir`,
@@ -42,7 +41,13 @@ fn walk_managed_dir(target_dir: &Path, managed_dir: &Path, current_dir: &Path) -
     let managed_dir_set = managed_dirs::read_managed_dirs_set(managed_dir)?;
     let managed_dirs_filename = managed_dirs::managed_dirs_filename();
 
-    walk_managed_dir_inner(target_dir, managed_dir, current_dir, &managed_dir_set, managed_dirs_filename)
+    walk_managed_dir_inner(
+        target_dir,
+        managed_dir,
+        current_dir,
+        &managed_dir_set,
+        managed_dirs_filename,
+    )
 }
 
 fn walk_managed_dir_inner(
@@ -59,7 +64,10 @@ fn walk_managed_dir_inner(
                 let relative_path = path.strip_prefix(managed_dir)?;
 
                 if path.is_file()
-                    && path.file_name().map(|n| n == managed_dirs_filename).unwrap_or(false)
+                    && path
+                        .file_name()
+                        .map(|n| n == managed_dirs_filename)
+                        .unwrap_or(false)
                     && path.parent() == Some(managed_dir)
                 {
                     continue;
@@ -69,7 +77,13 @@ fn walk_managed_dir_inner(
                     if managed_dir_set.contains(&relative_path.to_path_buf()) {
                         symlink_one_dir(&path, target_dir, relative_path)?;
                     } else {
-                        walk_managed_dir_inner(target_dir, managed_dir, &path, managed_dir_set, managed_dirs_filename)?;
+                        walk_managed_dir_inner(
+                            target_dir,
+                            managed_dir,
+                            &path,
+                            managed_dir_set,
+                            managed_dirs_filename,
+                        )?;
                     }
                 } else {
                     symlink_one_file(&path, target_dir, relative_path)?;
@@ -89,10 +103,10 @@ fn symlink_one_dir(managed_path: &Path, target_dir: &Path, relative_path: &Path)
     let dir_in_target = target_dir.join(relative_path);
     fs::create_dir_all(dir_in_target.parent().unwrap())?;
 
-    if let Ok(target) = fs::read_link(&dir_in_target) {
-        if target == managed_path {
-            return Ok(());
-        }
+    if let Ok(target) = fs::read_link(&dir_in_target)
+        && target == managed_path
+    {
+        return Ok(());
     }
 
     if dir_in_target.exists() || dir_in_target.symlink_metadata().is_ok() {
@@ -103,7 +117,9 @@ fn symlink_one_dir(managed_path: &Path, target_dir: &Path, relative_path: &Path)
                 "Conflict: {:?} exists as a real directory. \
                 A backup was created at {}. \
                 It now points to the puff-managed version.",
-                relative_path.file_name().unwrap_or(relative_path.as_os_str()),
+                relative_path
+                    .file_name()
+                    .unwrap_or(relative_path.as_os_str()),
                 backup.unwrap(),
             );
         } else {
@@ -112,7 +128,9 @@ fn symlink_one_dir(managed_path: &Path, target_dir: &Path, relative_path: &Path)
             println!(
                 "Conflict: {:?} exists in both the project directory and puff's registry. \
                 A backup of the original was created at {}.",
-                relative_path.file_name().unwrap_or(relative_path.as_os_str()),
+                relative_path
+                    .file_name()
+                    .unwrap_or(relative_path.as_os_str()),
                 backup.unwrap(),
             );
         }
@@ -130,10 +148,10 @@ fn symlink_one_file(managed_file: &Path, target_dir: &Path, relative_path: &Path
     let file_in_target_dir = target_dir.join(relative_path);
     fs::create_dir_all(file_in_target_dir.parent().unwrap())?;
 
-    if let Ok(target) = fs::read_link(&file_in_target_dir) {
-        if target == managed_file {
-            return Ok(());
-        }
+    if let Ok(target) = fs::read_link(&file_in_target_dir)
+        && target == managed_file
+    {
+        return Ok(());
     }
 
     if file_in_target_dir.exists() || file_in_target_dir.symlink_metadata().is_ok() {

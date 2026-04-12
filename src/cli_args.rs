@@ -1,6 +1,6 @@
 use clap::{Args, Parser, Subcommand};
-use clap_complete::engine::ArgValueCompleter;
 use clap_complete::Shell;
+use clap_complete::engine::ArgValueCompleter;
 use std::path::PathBuf;
 
 use crate::completions::{complete_project_name, complete_unassociated_project_name};

@@ -75,8 +75,7 @@ impl<'a> AddCommand<'a> {
         let parent = path
             .parent()
             .ok_or_else(|| anyhow!("Could not retrieve parent directory"))?;
-        let (project_name, project_root) =
-            self.locations_provider.find_project_for_path(parent)?;
+        let (project_name, project_root) = self.locations_provider.find_project_for_path(parent)?;
         let managed_dir = self.locations_provider.get_managed_dir(&project_name);
         let relative_path = path.strip_prefix(&project_root)?.to_path_buf();
 
@@ -90,13 +89,12 @@ impl<'a> AddCommand<'a> {
         Ok((project_name, project_root, managed_dir, relative_path))
     }
 
-    fn add_directory(
-        &self,
-        user_path: PathBuf,
-        add_to_git_ignore: bool,
-    ) -> Result<()> {
-        let (project_name, project_root, managed_dir, relative_path) = self.resolve_project(&user_path)?;
-        if let Some(parent_managed) = managed_dirs::is_inside_managed_dir(&managed_dir, &relative_path)? {
+    fn add_directory(&self, user_path: PathBuf, add_to_git_ignore: bool) -> Result<()> {
+        let (project_name, project_root, managed_dir, relative_path) =
+            self.resolve_project(&user_path)?;
+        if let Some(parent_managed) =
+            managed_dirs::is_inside_managed_dir(&managed_dir, &relative_path)?
+        {
             bail!(
                 "'{0}' is already managed as part of directory '{1}'. \
                 Use 'puff forget {1}' to stop managing the directory first.",
@@ -108,7 +106,12 @@ impl<'a> AddCommand<'a> {
         let managed_target = managed_dir.join(&relative_path);
 
         if user_path.exists() {
-            self.absorb_existing_directory(&user_path, &managed_dir, &managed_target, &relative_path)?;
+            self.absorb_existing_directory(
+                &user_path,
+                &managed_dir,
+                &managed_target,
+                &relative_path,
+            )?;
         } else {
             fs::create_dir_all(&managed_target)?;
         }
@@ -133,10 +136,7 @@ impl<'a> AddCommand<'a> {
             } else {
                 format!("{}/", dir_name)
             };
-            handler.add_to_git_ignore(
-                &project_root,
-                &gitignore_entry,
-            )?;
+            handler.add_to_git_ignore(&project_root, &gitignore_entry)?;
         }
 
         println!(
@@ -182,32 +182,36 @@ impl<'a> AddCommand<'a> {
             let sub_managed = managed_target.join(&entry_name);
 
             if entry_path.is_symlink() {
-                if let Ok(link_target) = fs::read_link(&entry_path) {
-                    if link_target.starts_with(managed_dir) {
-                        if !sub_managed.exists() {
-                            if link_target.is_dir() {
-                                copy_dir_recursive(&link_target, &sub_managed)?;
-                            } else {
-                                fs::copy(&link_target, &sub_managed)?;
-                            }
+                if let Ok(link_target) = fs::read_link(&entry_path)
+                    && link_target.starts_with(managed_dir)
+                {
+                    if !sub_managed.exists() {
+                        if link_target.is_dir() {
+                            copy_dir_recursive(&link_target, &sub_managed)?;
+                        } else {
+                            fs::copy(&link_target, &sub_managed)?;
                         }
-                        // Remove the old individually managed file only if it's at a different location
-                        if link_target != sub_managed {
-                            if link_target.is_dir() {
-                                let _ = fs::remove_dir_all(&link_target);
-                            } else {
-                                let _ = fs::remove_file(&link_target);
-                            }
-                            // Clean up empty parent dirs up to managed_dir
-                            let mut parent = link_target.parent();
-                            while let Some(p) = parent {
-                                if p == managed_dir { break; }
-                                if fs::remove_dir(p).is_err() { break; }
-                                parent = p.parent();
-                            }
-                        }
-                        continue;
                     }
+                    // Remove the old individually managed file only if it's at a different location
+                    if link_target != sub_managed {
+                        if link_target.is_dir() {
+                            let _ = fs::remove_dir_all(&link_target);
+                        } else {
+                            let _ = fs::remove_file(&link_target);
+                        }
+                        // Clean up empty parent dirs up to managed_dir
+                        let mut parent = link_target.parent();
+                        while let Some(p) = parent {
+                            if p == managed_dir {
+                                break;
+                            }
+                            if fs::remove_dir(p).is_err() {
+                                break;
+                            }
+                            parent = p.parent();
+                        }
+                    }
+                    continue;
                 }
                 // Symlink not pointing to our managed dir — copy the target
                 if entry_path.is_dir() {
@@ -216,7 +220,12 @@ impl<'a> AddCommand<'a> {
                     fs::copy(&entry_path, &sub_managed)?;
                 }
             } else if entry_path.is_dir() {
-                self.absorb_dir_recursive(&entry_path, managed_dir, &sub_managed, &relative_path.join(&entry_name))?;
+                self.absorb_dir_recursive(
+                    &entry_path,
+                    managed_dir,
+                    &sub_managed,
+                    &relative_path.join(&entry_name),
+                )?;
             } else {
                 if !sub_managed.exists() {
                     fs::create_dir_all(sub_managed.parent().unwrap())?;
@@ -227,20 +236,19 @@ impl<'a> AddCommand<'a> {
         Ok(())
     }
 
-    fn add_single_file(
-        &self,
-        user_file: PathBuf,
-        add_to_git_ignore: bool,
-    ) -> Result<()> {
+    fn add_single_file(&self, user_file: PathBuf, add_to_git_ignore: bool) -> Result<()> {
         let file_name = user_file
             .file_name()
             .ok_or_else(|| anyhow!("Couldn't retrieve file name"))?;
         let user_dir = user_file
             .parent()
             .ok_or_else(|| anyhow!("Could not retrieve user's project directory"))?;
-        let (project_name, _project_root, managed_dir, ref relative_path) = self.resolve_project(&user_file)?;
+        let (project_name, _project_root, managed_dir, ref relative_path) =
+            self.resolve_project(&user_file)?;
 
-        if let Some(parent_managed) = managed_dirs::is_inside_managed_dir(&managed_dir, relative_path)? {
+        if let Some(parent_managed) =
+            managed_dirs::is_inside_managed_dir(&managed_dir, relative_path)?
+        {
             bail!(
                 "'{0}' is already managed as part of directory '{1}/'. \
                 The file is accessible through the directory symlink.",
@@ -336,7 +344,10 @@ mod tests {
     use std::fs;
 
     use super::AddCommand;
-    use crate::config::{app_config::{AppConfig, Project}, locations::LocationsProvider};
+    use crate::config::{
+        app_config::{AppConfig, Project},
+        locations::LocationsProvider,
+    };
 
     #[test]
     fn add_file_when_project_does_not_exist() {
@@ -344,8 +355,10 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let current_dir = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let user_file = current_dir.path().join("file");
         let config_file = config_dir.path().join("config.json");
@@ -368,19 +381,26 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let current_dir = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let user_file = current_dir.path().join("file");
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: current_dir.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: current_dir.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
         let sut = AddCommand::new(&locations_provider);
 
-        sut.add_file(user_file, current_dir.path(), false, false).unwrap();
+        sut.add_file(user_file, current_dir.path(), false, false)
+            .unwrap();
     }
 
     #[test]
@@ -389,12 +409,18 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: project_root.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
@@ -403,7 +429,8 @@ mod tests {
         let user_file = subdir.join("secrets.env");
 
         let sut = AddCommand::new(&locations_provider);
-        sut.add_file(user_file, project_root.path(), false, false).unwrap();
+        sut.add_file(user_file, project_root.path(), false, false)
+            .unwrap();
 
         let managed_file = data_dir.path().join("projects/proj1/config/secrets.env");
         assert!(managed_file.exists());
@@ -415,12 +442,18 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: project_root.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
@@ -429,8 +462,13 @@ mod tests {
         let user_file = subdir.join("secrets.env");
 
         let sut = AddCommand::new(&locations_provider);
-        sut.add_file(std::path::PathBuf::from("secrets.env"), &subdir, false, false)
-            .unwrap();
+        sut.add_file(
+            std::path::PathBuf::from("secrets.env"),
+            &subdir,
+            false,
+            false,
+        )
+        .unwrap();
 
         let managed_file = data_dir.path().join("projects/proj1/config/secrets.env");
         assert!(managed_file.exists());
@@ -445,18 +483,25 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: project_root.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
         let dir_path = project_root.path().join("secrets");
         let sut = AddCommand::new(&locations_provider);
-        sut.add_file(dir_path.clone(), project_root.path(), false, true).unwrap();
+        sut.add_file(dir_path.clone(), project_root.path(), false, true)
+            .unwrap();
 
         assert!(dir_path.is_symlink());
         let managed = data_dir.path().join("projects/proj1/secrets");
@@ -469,12 +514,18 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: project_root.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
@@ -484,13 +535,20 @@ mod tests {
         fs::write(dir_path.join("app.env"), "APP_KEY=secret").unwrap();
 
         let sut = AddCommand::new(&locations_provider);
-        sut.add_file(dir_path.clone(), project_root.path(), false, false).unwrap();
+        sut.add_file(dir_path.clone(), project_root.path(), false, false)
+            .unwrap();
 
         assert!(dir_path.is_symlink());
         let managed = data_dir.path().join("projects/proj1/config");
         assert!(managed.is_dir());
-        assert_eq!(fs::read_to_string(managed.join("db.env")).unwrap(), "DB_URL=postgres");
-        assert_eq!(fs::read_to_string(managed.join("app.env")).unwrap(), "APP_KEY=secret");
+        assert_eq!(
+            fs::read_to_string(managed.join("db.env")).unwrap(),
+            "DB_URL=postgres"
+        );
+        assert_eq!(
+            fs::read_to_string(managed.join("app.env")).unwrap(),
+            "APP_KEY=secret"
+        );
     }
 
     #[test]
@@ -499,12 +557,18 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: project_root.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
@@ -523,12 +587,18 @@ mod tests {
         let data_dir = tempfile::tempdir().unwrap();
         let project_root = tempfile::tempdir().unwrap();
         fs::create_dir_all(data_dir.path().join("projects/proj1")).unwrap();
-        let locations_provider =
-            LocationsProvider::new(config_dir.path().to_path_buf(), data_dir.path().to_path_buf());
+        let locations_provider = LocationsProvider::new(
+            config_dir.path().to_path_buf(),
+            data_dir.path().to_path_buf(),
+        );
 
         let config_file = config_dir.path().join("config.json");
         let config = AppConfig {
-            projects: vec![Project { name: "proj1".into(), id: "1".into(), path: project_root.path().to_path_buf() }],
+            projects: vec![Project {
+                name: "proj1".into(),
+                id: "1".into(),
+                path: project_root.path().to_path_buf(),
+            }],
         };
         fs::write(&config_file, serde_json::to_string(&config).unwrap()).unwrap();
 
@@ -536,12 +606,18 @@ mod tests {
         let dir_path = project_root.path().join("config");
         fs::create_dir_all(&dir_path).unwrap();
         let sut = AddCommand::new(&locations_provider);
-        sut.add_file(dir_path, project_root.path(), false, false).unwrap();
+        sut.add_file(dir_path, project_root.path(), false, false)
+            .unwrap();
 
         // Now try to add a file inside it
         let file_inside = project_root.path().join("config/db.env");
         let result = sut.add_file(file_inside, project_root.path(), false, false);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("already managed as part of directory"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("already managed as part of directory")
+        );
     }
 }

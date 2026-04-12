@@ -15,12 +15,7 @@ pub struct InitCommand<'a> {
 }
 
 impl<'a> InitCommand<'a> {
-    pub fn init(
-        &self,
-        cwd: &Path,
-        name: Option<String>,
-        associate: Option<String>,
-    ) -> Result<()> {
+    pub fn init(&self, cwd: &Path, name: Option<String>, associate: Option<String>) -> Result<()> {
         if self.projects_retriever.is_associated(cwd)? {
             bail!("This directory is already initialized with puff.");
         }
@@ -97,10 +92,7 @@ impl<'a> InitCommand<'a> {
             items.push(format!("Associate with '{}'", project));
         }
 
-        let selection = prompt_select(
-            "Associate with an existing project or create new",
-            &items,
-        )?;
+        let selection = prompt_select("Associate with an existing project or create new", &items)?;
 
         if selection == 0 {
             Ok(UserChoice::Fresh)

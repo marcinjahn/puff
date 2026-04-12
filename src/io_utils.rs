@@ -1,7 +1,7 @@
 use anyhow::Result;
 use inquire::{
-    validator::{StringValidator, Validation},
     Confirm, Select, Text,
+    validator::{StringValidator, Validation},
 };
 
 pub fn confirm(question: String) -> Result<bool> {
@@ -12,7 +12,10 @@ pub fn confirm(question: String) -> Result<bool> {
 struct NonEmptyValidator;
 
 impl StringValidator for NonEmptyValidator {
-    fn validate(&self, input: &str) -> std::result::Result<Validation, Box<dyn std::error::Error + Send + Sync>> {
+    fn validate(
+        &self,
+        input: &str,
+    ) -> std::result::Result<Validation, Box<dyn std::error::Error + Send + Sync>> {
         if input.trim().is_empty() {
             Ok(Validation::Invalid("Input cannot be empty".into()))
         } else {

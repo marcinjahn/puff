@@ -36,7 +36,6 @@ impl GitIgnoreHandler {
 
     fn append_to_existing_git_ignore(&self, dir: &Path, file_to_ignore: &str) -> Result<()> {
         let mut file = OpenOptions::new()
-            .write(true)
             .append(true)
             .open(dir.join(".gitignore"))?;
 

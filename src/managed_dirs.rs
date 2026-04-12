@@ -90,7 +90,14 @@ fn write_managed_dirs(managed_dir: &Path, dirs: &[PathBuf]) -> Result<()> {
         .collect::<Vec<_>>()
         .join("\n");
     let path = managed_dirs_path(managed_dir);
-    fs::write(&path, if content.is_empty() { String::new() } else { content + "\n" })?;
+    fs::write(
+        &path,
+        if content.is_empty() {
+            String::new()
+        } else {
+            content + "\n"
+        },
+    )?;
     Ok(())
 }
 
@@ -112,7 +119,10 @@ mod tests {
         add_managed_dir(dir.path(), Path::new("config")).unwrap();
         add_managed_dir(dir.path(), Path::new("secrets/nested")).unwrap();
         let dirs = read_managed_dirs(dir.path()).unwrap();
-        assert_eq!(dirs, vec![PathBuf::from("config"), PathBuf::from("secrets/nested")]);
+        assert_eq!(
+            dirs,
+            vec![PathBuf::from("config"), PathBuf::from("secrets/nested")]
+        );
     }
 
     #[test]
@@ -154,8 +164,17 @@ mod tests {
     fn classify_path_works() {
         let dir = tempfile::tempdir().unwrap();
         add_managed_dir(dir.path(), Path::new("config")).unwrap();
-        assert!(matches!(classify_path(dir.path(), Path::new("config")).unwrap(), PathClassification::IsManaged));
-        assert!(matches!(classify_path(dir.path(), Path::new("config/db.env")).unwrap(), PathClassification::InsideManaged(_)));
-        assert!(matches!(classify_path(dir.path(), Path::new("other")).unwrap(), PathClassification::Unmanaged));
+        assert!(matches!(
+            classify_path(dir.path(), Path::new("config")).unwrap(),
+            PathClassification::IsManaged
+        ));
+        assert!(matches!(
+            classify_path(dir.path(), Path::new("config/db.env")).unwrap(),
+            PathClassification::InsideManaged(_)
+        ));
+        assert!(matches!(
+            classify_path(dir.path(), Path::new("other")).unwrap(),
+            PathClassification::Unmanaged
+        ));
     }
 }
