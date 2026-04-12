@@ -84,3 +84,8 @@ jobs:
         run: gh workflow run cargo-publish.yml -f tag="v${{ steps.version.outputs.version }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Homebrew formula update
+        run: gh workflow run homebrew-update.yml -f tag="v${{ steps.version.outputs.version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

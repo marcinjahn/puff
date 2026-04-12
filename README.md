@@ -120,7 +120,15 @@ unassociated configs.
 
 ## Installation
 
-### Cargo (recommended)
+### Homebrew (Linux and macOS, recommended)
+
+```sh
+brew install marcinjahn/tap/puff
+```
+
+This builds puff from source and installs shell completions automatically.
+
+### Cargo
 
 ```sh
 cargo install puff
