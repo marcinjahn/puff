@@ -38,7 +38,7 @@ pub enum Command {
     /// If the path does not exist, it will be created (as a file by default, or as a directory with --dir).
     Add {
         /// Paths to be added
-        #[arg(num_args = 1..)]
+        #[arg(num_args = 1.., required = true)]
         files: Vec<PathBuf>,
 
         /// Adds the new path to .gitignore (.gitignore will be created if it doesn't exist)
@@ -54,7 +54,7 @@ pub enum Command {
     /// project's directory unless the --delete flag is added
     Forget {
         /// Files to be removed from puff
-        #[arg(num_args = 1..)]
+        #[arg(num_args = 1.., required = true)]
         files: Vec<PathBuf>,
 
         /// Removes the file from the host

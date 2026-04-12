@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `puff add` and `puff forget` now print usage help instead of silently exiting when invoked
+  without file paths
+
 ## [1.0.0] - 2026-04-12
 
 ### Added
