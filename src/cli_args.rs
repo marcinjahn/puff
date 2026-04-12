@@ -107,11 +107,11 @@ Examples:
 #[derive(Args)]
 pub struct ListSubcommand {
     /// Retrieve only the unassociated projects
-    #[arg(short = 'u')]
+    #[arg(short = 'u', long = "unassociated")]
     pub only_unassociated: bool,
 
     /// Retrieve only the associated projects
-    #[arg(short = 'a')]
+    #[arg(short = 'a', long = "associated")]
     pub only_associated: bool,
 }
 

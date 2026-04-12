@@ -14,7 +14,7 @@ impl<'a> ListCommand<'a> {
     pub fn list(&self, only_associated: bool, only_unassociated: bool) -> Result<()> {
         if only_associated && only_unassociated {
             bail!(
-                "Flags --only-associated (-a) and --only-unassociated (-u) are mutually exclusive."
+                "Flags --associated (-a) and --unassociated (-u) are mutually exclusive."
             );
         }
 

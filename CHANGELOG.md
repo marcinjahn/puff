@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `--associated` and `--unassociated` long flag names for the `list` command (`-a` and `-u` still work)
+
 ### Fixed
 
 - `puff add` and `puff forget` now print usage help instead of silently exiting when invoked
