@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  release:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Calculate new version
+        id: version
+        run: |
+          output=$(./scripts/calculate-version.sh "${{ inputs.bump }}" Cargo.toml)
+          version=$(echo "$output" | sed -n '1p')
+          next_dev=$(echo "$output" | sed -n '2p')
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "next_dev=$next_dev" >> "$GITHUB_OUTPUT"
+          echo "Release version: $version"
+          echo "Next dev version: $next_dev"
+
+      - name: Update Cargo.toml version
+        run: |
+          sed -i "s/^version = \".*\"/version = \"${{ steps.version.outputs.version }}\"/" Cargo.toml
+
+      - name: Update Cargo.lock
+        run: cargo update --workspace
+
+      - name: Update CHANGELOG.md
+        run: ./scripts/update-changelog.sh "${{ steps.version.outputs.version }}" "https://github.com/marcinjahn/puff"
+
+      - name: Commit release, prepare next dev, and push
+        run: |
+          git add Cargo.toml Cargo.lock CHANGELOG.md
+          git commit -m "release: v${{ steps.version.outputs.version }}"
+          git tag "v${{ steps.version.outputs.version }}"
+
+          sed -i "s/^version = \".*\"/version = \"${{ steps.version.outputs.next_dev }}\"/" Cargo.toml
+          cargo update --workspace
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore: prepare ${{ steps.version.outputs.next_dev }}"
+
+          git push origin HEAD:main --tags
+
+      - name: Trigger GitHub Release
+        run: gh workflow run github-release.yml -f tag="v${{ steps.version.outputs.version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger crates.io publish
+        run: gh workflow run cargo-publish.yml -f tag="v${{ steps.version.outputs.version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

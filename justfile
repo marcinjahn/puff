@@ -41,5 +41,16 @@ test-unit:
 test-e2e: build-release
     PATH="$(pwd)/target/release:$PATH" bats tests/e2e/ --print-output-on-failure
 
+# Run script tests
+test-scripts:
+    bats tests/scripts/ --print-output-on-failure
+
+# Run app tests (unit + e2e, no scripts)
+test-app: test-unit test-e2e
+
 # Run all tests
-test: test-unit test-e2e
+test: test-app test-scripts
+
+# Trigger a new release (major, minor, or patch)
+release bump:
+    gh workflow run release.yml -f bump={{bump}}
