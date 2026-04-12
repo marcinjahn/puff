@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- statically links VC++ in Windows binary
+
 ## [1.1.0] - 2026-04-12
 
 ### Added
