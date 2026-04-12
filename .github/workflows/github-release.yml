@@ -54,6 +54,8 @@ jobs:
           tar: none
           archive: $bin-$tag-$target
           checksum: sha256
+          include: LICENSE,README.md
+          leading-dir: true
           ref: refs/tags/${{ inputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
