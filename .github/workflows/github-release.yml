@@ -18,6 +18,8 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
       - uses: taiki-e/create-gh-release-action@v1
+        with:
+          ref: refs/tags/${{ inputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -40,5 +42,6 @@ jobs:
           zip: all
           tar: none
           archive: $bin-$tag-$target
+          ref: refs/tags/${{ inputs.tag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
