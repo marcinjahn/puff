@@ -18,7 +18,6 @@ concurrency:
 
 permissions:
   contents: write
-  actions: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -30,6 +29,8 @@ jobs:
   release:
     needs: tests
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -75,17 +76,24 @@ jobs:
 
           git push origin HEAD:main --tags
 
-      - name: Trigger GitHub Release
-        run: gh workflow run github-release.yml -f tag="v${{ steps.version.outputs.version }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  github-release:
+    needs: release
+    uses: ./.github/workflows/github-release.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    permissions:
+      contents: write
 
-      - name: Trigger crates.io publish
-        run: gh workflow run cargo-publish.yml -f tag="v${{ steps.version.outputs.version }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  cargo-publish:
+    needs: release
+    uses: ./.github/workflows/cargo-publish.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    secrets: inherit
 
-      - name: Trigger Homebrew formula update
-        run: gh workflow run homebrew-update.yml -f tag="v${{ steps.version.outputs.version }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  homebrew-update:
+    needs: [release, github-release]
+    uses: ./.github/workflows/homebrew-update.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    secrets: inherit

@@ -6,6 +6,12 @@ on:
       tag:
         description: "Existing tag to publish (e.g. v0.2.0)"
         required: true
+  workflow_call:
+    inputs:
+      tag:
+        description: "Existing tag to publish (e.g. v0.2.0)"
+        required: true
+        type: string
 
 jobs:
   update-formula:
@@ -17,14 +23,6 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
 
-      - name: Download source tarball and compute SHA256
-        id: sha
-        run: |
-          url="https://github.com/marcinjahn/puff/archive/refs/tags/${{ inputs.tag }}.tar.gz"
-          sha256=$(curl -sL "$url" | sha256sum | awk '{print $1}')
-          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-
       - name: Check out Homebrew tap
         uses: actions/checkout@v6
         with:
@@ -33,8 +31,19 @@ jobs:
 
       - name: Update formula
         run: |
-          sed -i 's|url ".*"|url "${{ steps.sha.outputs.url }}"|' Formula/puff.rb
-          sed -i 's|sha256 ".*"|sha256 "${{ steps.sha.outputs.sha256 }}"|' Formula/puff.rb
+          tag="${{ inputs.tag }}"
+          version="${{ steps.version.outputs.version }}"
+          formula="Formula/puff.rb"
+
+          sed -i "s/version \".*\"/version \"${version}\"/" "$formula"
+
+          for target in aarch64-apple-darwin x86_64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu; do
+            url="https://github.com/marcinjahn/puff/releases/download/${tag}/puff-${tag}-${target}.zip"
+            sha256=$(curl -sfL "${url}.sha256" | awk '{print $1}')
+
+            sed -i "s|url \".*${target}.*\"|url \"${url}\"|" "$formula"
+            sed -i "/url \".*${target}.*\"/{n; s/sha256 \".*\"/sha256 \"${sha256}\"/;}" "$formula"
+          done
 
       - name: Commit and push
         run: |
