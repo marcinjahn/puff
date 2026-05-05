@@ -56,6 +56,15 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           git clone https://github.com/bats-core/bats-core.git "$HOME/bats-core" --depth=1
+          # Git for Windows 2.54 (in the windows-2025 runner image since late
+          # April 2026) ships a Bash that self-identifies as Cygwin, so $PWD
+          # stays in Windows form (D:/...) and ends up in BATS_TEST_DIRNAME.
+          # bats's bats_internal_load rejects any path whose first char isn't
+          # '/', so `load helpers` fails. The usual `cd -P .` workaround
+          # doesn't help here because just (a Rust binary) re-sets PWD when
+          # spawning the recipe shell. Patch the check to also accept
+          # drive-letter absolute paths (D:/...). See git-for-windows/git#6195.
+          sed -i 's|"${library_load_path:0:1}" != /|"${library_load_path:0:1}" != / \&\& "${library_load_path:1:2}" != ":/"|' "$HOME/bats-core/lib/bats-core/test_functions.bash"
           echo "$HOME/bats-core/bin" >> "$GITHUB_PATH"
       - name: Run e2e tests
         run: just test-e2e
