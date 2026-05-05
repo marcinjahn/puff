@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-05-05
+
 ### Added
 
 - updated dependencies
@@ -107,7 +109,8 @@ Initial release with core functionality:
 - `puff rm` — stop managing a file
 - `puff project rm` — stop managing a project
 
-[unreleased]: https://github.com/marcinjahn/puff/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/marcinjahn/puff/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/marcinjahn/puff/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/marcinjahn/puff/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/marcinjahn/puff/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/marcinjahn/puff/compare/v0.1.7...v1.0.0
