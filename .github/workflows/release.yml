@@ -97,3 +97,10 @@ jobs:
     with:
       tag: v${{ needs.release.outputs.version }}
     secrets: inherit
+
+  winget-update:
+    needs: [release, github-release]
+    uses: ./.github/workflows/winget-update.yml
+    with:
+      tag: v${{ needs.release.outputs.version }}
+    secrets: inherit

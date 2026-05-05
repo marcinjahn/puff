@@ -133,7 +133,13 @@ unassociated configs.
 brew install marcinjahn/tap/puff
 ```
 
-This builds puff from source and installs shell completions automatically.
+### WinGet (Windows, recommended)
+
+```powershell
+winget install marcinjahn.puff --source winget
+```
+
+This installs a pre-built binary and adds it to your `PATH`.
 
 ### Cargo
 
@@ -180,7 +186,7 @@ cargo-based installations.
 ```sh
 git clone https://github.com/marcinjahn/puff
 cd puff
-cargo install --path .
+cargo install --path . # or `just install`
 ```
 
 ## Command Reference
