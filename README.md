@@ -136,12 +136,6 @@ brew install marcinjahn/tap/puff
 ### WinGet (Windows, recommended)
 
 ```powershell
-winget install marcinjahn.puff
-```
-
-### Winget (Windows, recommended)
-
-```powershell
 winget install marcinjahn.puff --source winget
 ```
 
