@@ -139,6 +139,14 @@ brew install marcinjahn/tap/puff
 winget install marcinjahn.puff
 ```
 
+### Winget (Windows, recommended)
+
+```powershell
+winget install marcinjahn.puff --source winget
+```
+
+This installs a pre-built binary and adds it to your `PATH`.
+
 ### Cargo
 
 ```sh
@@ -184,7 +192,7 @@ cargo-based installations.
 ```sh
 git clone https://github.com/marcinjahn/puff
 cd puff
-cargo install --path .
+cargo install --path . # or `just install`
 ```
 
 ## Command Reference
